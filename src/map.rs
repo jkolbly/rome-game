@@ -26,6 +26,9 @@ pub struct Map {
     lloyd_iters: u32,
     generator_border: f32,
     height_perlin_scale: f32,
+
+    /// A list of all the sectors in the map.
+    sectors: Vec<Entity>,
 }
 
 /// A single polygon in the voronoi diagram.
@@ -48,9 +51,9 @@ pub fn generate_map(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut commands: Commands,
-    mut query: Query<(Entity, &Map, &mut Entropy<WyRand>)>,
+    mut query: Query<(Entity, &mut Map, &mut Entropy<WyRand>)>,
 ) {
-    let (entity, map, mut rng) = query.single_mut().unwrap();
+    let (entity, mut map, mut rng) = query.single_mut().unwrap();
 
     commands.entity(entity).despawn_related::<Children>();
 
@@ -123,18 +126,17 @@ pub fn generate_map(
         let mesh_handle = meshes.add(mesh);
         let color = Color::srgb(0.5, height, 0.5);
         let material_handle = materials.add(color);
-        let mesh_entity = commands
+        let sector_entity = commands
             .spawn((
                 Mesh2d(mesh_handle),
                 MeshMaterial2d(material_handle),
                 Transform::from_xyz(0.0, 0.0, 0.0),
                 sector,
-                ClickState::default(),
-                ClickHitbox::Circle { radius: 10.0 },
             ))
             .id();
 
-        commands.entity(entity).add_child(mesh_entity);
+        map.sectors.push(sector_entity);
+        commands.entity(entity).add_child(sector_entity);
     }
 }
 
@@ -175,6 +177,8 @@ pub fn create_map(mut commands: Commands) {
             lloyd_iters: 1,
             generator_border: 10.0,
             height_perlin_scale: 0.015,
+
+            sectors: Vec::new(),
         },
         Entropy::<WyRand>::seed_from_u64(seed),
         Transform::IDENTITY,
