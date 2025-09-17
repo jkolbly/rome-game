@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use bevy::{
     asset::RenderAssetUsages,
     prelude::*,
@@ -45,6 +47,9 @@ pub struct Sector {
     height: f32,
 
     biome: Biome,
+
+    /// This sector's neighbors.
+    neighbors: Vec<Entity>,
 }
 
 pub fn generate_map(
@@ -92,7 +97,13 @@ pub fn generate_map(
         .build()
         .unwrap();
 
-    for cell in voronoi.iter_cells() {
+    // Maps VoronoiCell site indices to entity ID's
+    let mut site_to_entity: HashMap<usize, Entity> = HashMap::new();
+
+    // Maps VoronoiCell site indices to sectors
+    let mut site_to_sector: HashMap<usize, Sector> = HashMap::new();
+
+    for (site_index, cell) in voronoi.iter_cells().enumerate() {
         let vertices: Vec<Vec2> = cell.iter_vertices().map(point_to_vec2).collect();
 
         let site = point_to_vec2(cell.site_position());
@@ -103,6 +114,7 @@ pub fn generate_map(
             centroid,
             height,
             biome: Biome::Plains,
+            neighbors: Vec::new(),
         };
 
         let mesh = Mesh::new(
@@ -131,12 +143,33 @@ pub fn generate_map(
                 Mesh2d(mesh_handle),
                 MeshMaterial2d(material_handle),
                 Transform::from_xyz(0.0, 0.0, 0.0),
-                sector,
             ))
             .id();
 
         map.sectors.push(sector_entity);
         commands.entity(entity).add_child(sector_entity);
+
+        println!(
+            "Inserting into table site_index: {} entity: {}",
+            site_index, sector_entity
+        );
+
+        site_to_entity.insert(site_index, sector_entity);
+        site_to_sector.insert(site_index, sector);
+    }
+
+    for (site_index, cell) in voronoi.iter_cells().enumerate() {
+        println!("Reading site index: {}", site_index);
+        let sector = site_to_sector.get_mut(&site_index).unwrap();
+        for neighbor_site_index in cell.iter_neighbors() {
+            sector
+                .neighbors
+                .push(*site_to_entity.get(&neighbor_site_index).unwrap());
+        }
+
+        commands
+            .entity(*site_to_entity.get(&site_index).unwrap())
+            .insert(site_to_sector.remove(&site_index).unwrap());
     }
 }
 
@@ -156,13 +189,20 @@ fn point_to_vec2(p: &Point) -> Vec2 {
 
 pub fn draw_debug(mut gizmos: Gizmos, map_query: Query<&Map>, sector_query: Query<&Sector>) {
     for sector in &sector_query {
-        gizmos.circle_2d(sector.site, 3.0, Color::WHITE);
+        // gizmos.circle_2d(sector.site, 3.0, Color::WHITE);
         gizmos.circle_2d(sector.centroid, 3.0, Color::srgb(0.0, 1.0, 1.0));
+
+        for neighbor in &sector.neighbors {
+            gizmos.line_2d(
+                sector.centroid,
+                sector_query.get(*neighbor).unwrap().centroid,
+                Color::WHITE,
+            );
+        }
     }
 
-    for map in map_query {
-        gizmos.rect_2d(map.size / 2.0, map.size, Color::WHITE);
-    }
+    let map = map_query.single().unwrap();
+    // gizmos.rect_2d(map.size / 2.0, map.size, Color::WHITE);
 }
 
 pub fn create_map(mut commands: Commands) {
