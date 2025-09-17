@@ -2,6 +2,8 @@ use bevy::{input::InputSystem, prelude::*};
 use bevy_prng::WyRand;
 use bevy_rand::plugin::EntropyPlugin;
 
+mod biome;
+mod city;
 mod input;
 mod map;
 mod utils;
