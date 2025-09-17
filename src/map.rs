@@ -22,6 +22,7 @@ pub struct Map {
 pub struct MapBundle {
     map: Map,
     rng: Entropy<WyRand>,
+    transform: Transform,
 }
 
 /// A single polygon in the voronoi diagram.
@@ -38,9 +39,11 @@ pub fn generate_map(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut commands: Commands,
-    mut query: Query<(&mut Map, &mut Entropy<WyRand>)>,
+    mut query: Query<(Entity, &mut Map, &mut Entropy<WyRand>)>,
 ) {
-    for (mut map, mut rng) in &mut query {
+    for (entity, mut map, mut rng) in &mut query {
+        commands.entity(entity).despawn_related::<Children>();
+
         println!("Generating map with size: {}", map.size);
 
         let mut points: Vec<Vec2> = Vec::new();
@@ -89,11 +92,14 @@ pub fn generate_map(
             let mesh_handle = meshes.add(mesh);
             let color = Color::srgb(rng.random(), rng.random(), rng.random());
             let material_handle = materials.add(color);
-            commands.spawn((
-                Mesh2d(mesh_handle),
-                MeshMaterial2d(material_handle),
-                Transform::from_xyz(vec.x, vec.y, 0.0),
-            ));
+            let mesh_entity = commands
+                .spawn((
+                    Mesh2d(mesh_handle),
+                    MeshMaterial2d(material_handle),
+                    Transform::from_xyz(vec.x, vec.y, 0.0),
+                ))
+                .id();
+            commands.entity(entity).add_child(mesh_entity);
         }
 
         for (_, cell) in voronoi.get_cells() {
@@ -131,5 +137,6 @@ pub fn create_map(mut commands: Commands) {
             generator_border: 50.0,
         },
         rng: Entropy::<WyRand>::seed_from_u64(seed),
+        transform: Transform::IDENTITY,
     });
 }
