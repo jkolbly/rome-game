@@ -4,6 +4,7 @@ use bevy_rand::plugin::EntropyPlugin;
 
 mod biome;
 mod city;
+mod clickable;
 mod input;
 mod map;
 mod utils;
@@ -15,7 +16,19 @@ impl Plugin for GamePlugin {
         app.init_resource::<input::MousePos>()
             .add_systems(Startup, (map::create_map, map::generate_map).chain())
             .add_systems(Startup, add_camera)
-            .add_systems(PreUpdate, input::update_mouse_pos.after(InputSystem))
+            .add_systems(
+                PreUpdate,
+                (
+                    input::update_mouse_pos,
+                    (
+                        clickable::update_clickables,
+                        clickable::remove_click_components,
+                    ),
+                    clickable::add_click_components,
+                )
+                    .chain()
+                    .after(InputSystem),
+            )
             .add_systems(Update, (input::mouse_button_input, input::scroll_events));
         // .add_systems(Update, map::draw_debug);
     }

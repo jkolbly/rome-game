@@ -9,7 +9,11 @@ use noiz::prelude::*;
 use rand::{Rng, SeedableRng};
 use voronoice::*;
 
-use crate::{biome::Biome, utils};
+use crate::{
+    biome::Biome,
+    clickable::{ClickHitbox, ClickState, JustPressed},
+    utils,
+};
 
 /// An entire game map, effectively a voronoi diagram.
 #[derive(Component)]
@@ -125,6 +129,8 @@ pub fn generate_map(
                 MeshMaterial2d(material_handle),
                 Transform::from_xyz(0.0, 0.0, 0.0),
                 sector,
+                ClickState::default(),
+                ClickHitbox::Circle { radius: 10.0 },
             ))
             .id();
 
