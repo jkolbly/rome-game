@@ -1,7 +1,7 @@
 use bevy::{
     asset::RenderAssetUsages,
     prelude::*,
-    render::mesh::{Indices, PrimitiveTopology, RectangleMeshBuilder},
+    render::mesh::{Indices, PrimitiveTopology},
 };
 use bevy_prng::WyRand;
 use bevy_rand::prelude::Entropy;
@@ -26,6 +26,7 @@ pub struct Map {
 
 /// A single polygon in the voronoi diagram.
 #[derive(Debug, Component)]
+#[require(Mesh2d, Transform)]
 pub struct Sector {
     /// The point that spawned this sector in the voronoi diagram.
     site: Vec2,
