@@ -3665,6 +3665,7 @@ dependencies = [
  "bevy_rand",
  "rand 0.9.2",
  "rand_core 0.9.3",
+ "voronoi_mosaic",
 ]
 
 [[package]]
@@ -4319,6 +4320,15 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
+
+[[package]]
+name = "voronoi_mosaic"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc84881ba39202fca1b9078d025b3cf1431b01c7008910b17becaae6cfaa34aa"
+dependencies = [
+ "bevy",
+]
 
 [[package]]
 name = "walkdir"

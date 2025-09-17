@@ -3,22 +3,28 @@ use bevy_prng::WyRand;
 use bevy_rand::plugin::EntropyPlugin;
 
 mod map;
-mod voronoi;
+mod utils;
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Startup,
-            (map::create_map, map::generate_map, map::gen_map_mesh).chain(),
-        )
-        .add_systems(Startup, add_camera);
+        app.add_systems(Startup, (map::create_map, map::generate_map).chain())
+            .add_systems(Startup, add_camera);
+        // .add_systems(Update, map::draw_debug);
     }
 }
 
 fn add_camera(mut commands: Commands) {
-    commands.spawn(Camera2d);
+    let ortho = OrthographicProjection {
+        scale: 1.0,
+        ..OrthographicProjection::default_2d()
+    };
+    commands.spawn((
+        Camera2d,
+        Projection::Orthographic(ortho),
+        Transform::from_xyz(250.0, 250.0, 0.0),
+    ));
 }
 
 fn main() {
