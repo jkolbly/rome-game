@@ -1,4 +1,9 @@
-use bevy::{input::InputSystem, prelude::*, ui::UiSystem};
+use bevy::{
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    input::InputSystem,
+    prelude::*,
+    ui::UiSystem,
+};
 use bevy_prng::WyRand;
 use bevy_rand::plugin::EntropyPlugin;
 
@@ -70,5 +75,10 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(EntropyPlugin::<WyRand>::default())
         .add_plugins(GamePlugin)
+        .add_plugins((
+            LogDiagnosticsPlugin::default(),
+            FrameTimeDiagnosticsPlugin::default(),
+            bevy::diagnostic::SystemInformationDiagnosticsPlugin,
+        ))
         .run();
 }
