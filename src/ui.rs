@@ -1,0 +1,28 @@
+use bevy::prelude::*;
+
+/// Component for a standard UI window.
+#[derive(Component)]
+#[require(Node)]
+pub struct Window {}
+
+/// Component for UI displayed relative to the world.
+#[derive(Component)]
+#[require(Node)]
+pub struct UIWorldPosition {
+    pub pos: Vec2,
+}
+
+pub fn update_world_ui_positions(
+    q_camera: Query<(&Camera, &GlobalTransform)>,
+    q_node: Query<(&UIWorldPosition, &mut Node)>,
+) {
+    let (camera, t_camera) = q_camera.single().unwrap();
+
+    for (pos, mut node) in q_node {
+        let screen_pos = camera
+            .world_to_viewport(t_camera, pos.pos.extend(0.0))
+            .unwrap();
+        node.left = Val::Px(screen_pos.x);
+        node.top = Val::Px(screen_pos.y);
+    }
+}

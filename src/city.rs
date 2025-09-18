@@ -6,6 +6,7 @@ use rand::Rng;
 use crate::{
     clickable::{ClickHitbox, ClickState, JustPressed},
     map::{Map, Sector},
+    ui,
 };
 
 #[derive(Component)]
@@ -14,10 +15,24 @@ pub struct City {
     population: u32,
 }
 
-pub fn click_city(query: Query<&City, With<JustPressed>>) {
-    let Ok(city) = query.single() else {
+pub fn click_city(mut commands: Commands, query: Query<(&City, &Transform), With<JustPressed>>) {
+    let Ok((city, t_city)) = query.single() else {
         return;
     };
+
+    commands.spawn((
+        ui::Window {},
+        ui::UIWorldPosition {
+            pos: t_city.translation.xy(),
+        },
+        Node {
+            width: Val::Percent(25.0),
+            height: Val::Percent(25.0),
+            ..Node::default()
+        },
+        BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
+    ));
+
     println!("Just clicked on city!");
 }
 

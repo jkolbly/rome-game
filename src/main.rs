@@ -1,4 +1,4 @@
-use bevy::{input::InputSystem, prelude::*};
+use bevy::{input::InputSystem, prelude::*, ui::UiSystem};
 use bevy_prng::WyRand;
 use bevy_rand::plugin::EntropyPlugin;
 
@@ -8,6 +8,7 @@ mod clickable;
 mod keyboard;
 mod map;
 mod mouse;
+mod ui;
 mod utils;
 
 pub struct GamePlugin;
@@ -45,6 +46,7 @@ impl Plugin for GamePlugin {
                     mouse::mouse_button_input,
                     mouse::scroll_events,
                     city::click_city,
+                    ui::update_world_ui_positions,
                 ),
             );
         // .add_systems(Update, map::draw_debug);
