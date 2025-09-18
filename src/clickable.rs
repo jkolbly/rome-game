@@ -80,14 +80,10 @@ pub fn update_clickables(
 }
 
 /// Remove all click state components.
-pub fn remove_click_components(
-    mut commands: Commands,
-    jp_query: Option<Single<Entity, With<JustPressed>>>,
-) {
-    let Some(single) = jp_query else {
+pub fn remove_click_components(mut commands: Commands, jp_query: Query<Entity, With<Pressed>>) {
+    let Ok(entity) = jp_query.single() else {
         return;
     };
-    let entity = single.into_inner();
     commands.entity(entity).remove::<JustPressed>();
     commands.entity(entity).remove::<Pressed>();
 }

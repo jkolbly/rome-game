@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, ops::Range};
 
 use bevy::{
     asset::RenderAssetUsages,
@@ -21,7 +21,7 @@ use crate::{
 #[derive(Component)]
 #[require(Entropy<WyRand>, Transform)]
 pub struct Map {
-    size: Vec2,
+    pub size: Vec2,
 
     sector_num: u32,
 
@@ -30,7 +30,12 @@ pub struct Map {
     height_perlin_scale: f32,
 
     /// A list of all the sectors in the map.
-    sectors: Vec<Entity>,
+    pub sectors: Vec<Entity>,
+
+    pub city_num: u32,
+    pub city_min_spacing: f32,
+    pub city_start_pop_range: Range<u32>,
+    pub city_deadzone: f32,
 }
 
 /// A single polygon in the voronoi diagram.
@@ -41,7 +46,7 @@ pub struct Sector {
     site: Vec2,
 
     /// The centroid of this site's polygon.
-    centroid: Vec2,
+    pub centroid: Vec2,
 
     /// The height of this sector on the map.
     height: f32,
@@ -149,17 +154,11 @@ pub fn generate_map(
         map.sectors.push(sector_entity);
         commands.entity(entity).add_child(sector_entity);
 
-        println!(
-            "Inserting into table site_index: {} entity: {}",
-            site_index, sector_entity
-        );
-
         site_to_entity.insert(site_index, sector_entity);
         site_to_sector.insert(site_index, sector);
     }
 
     for (site_index, cell) in voronoi.iter_cells().enumerate() {
-        println!("Reading site index: {}", site_index);
         let sector = site_to_sector.get_mut(&site_index).unwrap();
         for neighbor_site_index in cell.iter_neighbors() {
             sector
@@ -210,7 +209,7 @@ pub fn create_map(mut commands: Commands) {
 
     commands.spawn((
         Map {
-            size: vec2(500.0, 500.0),
+            size: vec2(1000.0, 500.0),
 
             sector_num: 5000,
 
@@ -219,6 +218,11 @@ pub fn create_map(mut commands: Commands) {
             height_perlin_scale: 0.015,
 
             sectors: Vec::new(),
+
+            city_num: 10,
+            city_min_spacing: 100.0,
+            city_start_pop_range: 10..1000,
+            city_deadzone: 20.0,
         },
         Entropy::<WyRand>::seed_from_u64(seed),
         Transform::IDENTITY,

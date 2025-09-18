@@ -14,7 +14,16 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<input::MousePos>()
-            .add_systems(Startup, (map::create_map, map::generate_map).chain())
+            .add_systems(
+                Startup,
+                (
+                    map::create_map,
+                    map::generate_map,
+                    city::spawn_cities,
+                    city::add_city_meshes,
+                )
+                    .chain(),
+            )
             .add_systems(Startup, add_camera)
             .add_systems(
                 PreUpdate,
@@ -29,7 +38,14 @@ impl Plugin for GamePlugin {
                     .chain()
                     .after(InputSystem),
             )
-            .add_systems(Update, (input::mouse_button_input, input::scroll_events));
+            .add_systems(
+                Update,
+                (
+                    input::mouse_button_input,
+                    input::scroll_events,
+                    city::click_city,
+                ),
+            );
         // .add_systems(Update, map::draw_debug);
     }
 }
@@ -42,7 +58,7 @@ fn add_camera(mut commands: Commands) {
     commands.spawn((
         Camera2d,
         Projection::Orthographic(ortho),
-        Transform::from_xyz(250.0, 250.0, 0.0),
+        Transform::from_xyz(500.0, 250.0, 0.0),
     ));
 }
 
