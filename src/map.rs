@@ -11,10 +11,7 @@ use noiz::prelude::*;
 use rand::{Rng, SeedableRng};
 use voronoice::*;
 
-use crate::{
-    biome::Biome,
-    utils,
-};
+use crate::{biome::Biome, utils};
 
 /// An entire game map, effectively a voronoi diagram.
 #[derive(Component)]
@@ -231,5 +228,6 @@ pub fn create_map(mut commands: Commands) {
         },
         Entropy::<WyRand>::seed_from_u64(seed),
         Transform::IDENTITY,
+        Visibility::Visible,
     ));
 }
