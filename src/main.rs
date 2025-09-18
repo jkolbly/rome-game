@@ -5,15 +5,16 @@ use bevy_rand::plugin::EntropyPlugin;
 mod biome;
 mod city;
 mod clickable;
-mod input;
+mod keyboard;
 mod map;
+mod mouse;
 mod utils;
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<input::MousePos>()
+        app.init_resource::<mouse::MousePos>()
             .add_systems(
                 Startup,
                 (
@@ -28,7 +29,7 @@ impl Plugin for GamePlugin {
             .add_systems(
                 PreUpdate,
                 (
-                    input::update_mouse_pos,
+                    mouse::update_mouse_pos,
                     (
                         clickable::update_clickables,
                         clickable::remove_click_components,
@@ -41,8 +42,8 @@ impl Plugin for GamePlugin {
             .add_systems(
                 Update,
                 (
-                    input::mouse_button_input,
-                    input::scroll_events,
+                    mouse::mouse_button_input,
+                    mouse::scroll_events,
                     city::click_city,
                 ),
             );

@@ -1,4 +1,4 @@
-use crate::input::MousePos;
+use crate::mouse::MousePos;
 use bevy::prelude::*;
 
 /// A collision shape for mouse interaction.

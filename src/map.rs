@@ -27,7 +27,7 @@ pub struct Map {
 
     lloyd_iters: u32,
     generator_border: f32,
-    height_perlin_scale: f32,
+    altitude_perlin_scale: f32,
 
     /// A list of all the sectors in the map.
     pub sectors: Vec<Entity>,
@@ -112,7 +112,7 @@ pub fn generate_map(
         let vertices: Vec<Vec2> = cell.iter_vertices().map(point_to_vec2).collect();
 
         let site = point_to_vec2(cell.site_position());
-        let height = perlin_noise.sample(site * map.height_perlin_scale);
+        let height = perlin_noise.sample(site * map.altitude_perlin_scale);
         let centroid = utils::centroid(&vertices);
         let sector = Sector {
             site,
@@ -205,7 +205,7 @@ pub fn draw_debug(mut gizmos: Gizmos, map_query: Query<&Map>, sector_query: Quer
 }
 
 pub fn create_map(mut commands: Commands) {
-    let seed: u64 = 1;
+    let seed: u64 = 3;
 
     commands.spawn((
         Map {
@@ -215,7 +215,7 @@ pub fn create_map(mut commands: Commands) {
 
             lloyd_iters: 1,
             generator_border: 10.0,
-            height_perlin_scale: 0.015,
+            altitude_perlin_scale: 0.015,
 
             sectors: Vec::new(),
 
