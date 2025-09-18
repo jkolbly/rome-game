@@ -13,7 +13,6 @@ use voronoice::*;
 
 use crate::{
     biome::Biome,
-    clickable::{ClickHitbox, ClickState, JustPressed},
     utils,
 };
 

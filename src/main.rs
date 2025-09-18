@@ -2,7 +2,6 @@ use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     input::InputSystem,
     prelude::*,
-    ui::UiSystem,
 };
 use bevy_prng::WyRand;
 use bevy_rand::plugin::EntropyPlugin;
