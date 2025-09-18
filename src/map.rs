@@ -129,9 +129,10 @@ pub fn generate_map(
             triangles.push(i as u32 + index_offset);
             triangles.push(i as u32 + index_offset + 1);
         }
+        let color = Color::srgb(0.5, height, 0.5);
         for vertex in vertices {
             positions.push(vertex.extend(0.0));
-            colors.push([0.5, height, 0.5, 1.0]);
+            colors.push(color.to_linear().to_f32_array());
         }
 
         let sector_entity = commands.spawn(()).id();
