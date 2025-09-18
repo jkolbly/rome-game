@@ -108,6 +108,11 @@ pub fn generate_map(
     // Maps VoronoiCell site indices to sectors
     let mut site_to_sector: HashMap<usize, Sector> = HashMap::new();
 
+    // Data to be added to map mesh
+    let mut positions: Vec<Vec3> = Vec::new();
+    let mut triangles: Vec<u32> = Vec::new();
+    let mut colors: Vec<[f32; 4]> = Vec::new();
+
     for (site_index, cell) in voronoi.iter_cells().enumerate() {
         let vertices: Vec<Vec2> = cell.iter_vertices().map(point_to_vec2).collect();
 
@@ -122,34 +127,18 @@ pub fn generate_map(
             neighbors: Vec::new(),
         };
 
-        let mesh = Mesh::new(
-            PrimitiveTopology::TriangleList,
-            RenderAssetUsages::RENDER_WORLD,
-        )
-        .with_inserted_attribute(
-            Mesh::ATTRIBUTE_POSITION,
-            vertices
-                .iter()
-                .map(|v| v.extend(0.0))
-                .collect::<Vec<Vec3>>(),
-        )
-        .with_inserted_indices(Indices::U32(
-            (1..vertices.len() - 1)
-                .map(|i| vec![0u32, i as u32, i as u32 + 1])
-                .flatten()
-                .collect(),
-        ));
+        let index_offset = positions.len() as u32;
+        for i in 1..vertices.len() - 1 {
+            triangles.push(index_offset as u32);
+            triangles.push(i as u32 + index_offset);
+            triangles.push(i as u32 + index_offset + 1);
+        }
+        for vertex in vertices {
+            positions.push(vertex.extend(0.0));
+            colors.push([0.5, height, 0.5, 1.0]);
+        }
 
-        let mesh_handle = meshes.add(mesh);
-        let color = Color::srgb(0.5, height, 0.5);
-        let material_handle = materials.add(color);
-        let sector_entity = commands
-            .spawn((
-                Mesh2d(mesh_handle),
-                MeshMaterial2d(material_handle),
-                Transform::from_xyz(0.0, 0.0, 0.0),
-            ))
-            .id();
+        let sector_entity = commands.spawn(()).id();
 
         map.sectors.push(sector_entity);
         commands.entity(entity).add_child(sector_entity);
@@ -170,6 +159,23 @@ pub fn generate_map(
             .entity(*site_to_entity.get(&site_index).unwrap())
             .insert(site_to_sector.remove(&site_index).unwrap());
     }
+
+    let mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::RENDER_WORLD,
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
+    .with_inserted_indices(Indices::U32(triangles));
+    let mesh_handle = meshes.add(mesh);
+    let mesh_entity = commands
+        .spawn((
+            Mesh2d(mesh_handle),
+            MeshMaterial2d(materials.add(Color::WHITE)),
+            Transform::from_xyz(0.0, 0.0, 0.0),
+        ))
+        .id();
+    commands.entity(entity).add_child(mesh_entity);
 }
 
 fn vec2_to_point(v: &Vec2) -> Point {
