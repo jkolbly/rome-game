@@ -1,6 +1,6 @@
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    input::InputSystem,
+    input::{InputSystem, common_conditions::input_just_pressed},
     prelude::*,
 };
 use bevy_prng::WyRand;
@@ -8,6 +8,7 @@ use bevy_rand::plugin::EntropyPlugin;
 
 mod biome;
 mod city;
+mod click_off;
 mod clickable;
 mod keyboard;
 mod map;
@@ -56,6 +57,10 @@ impl Plugin for GamePlugin {
                     city::click_city,
                     ui::update_world_ui_positions,
                 ),
+            )
+            .add_systems(
+                Update,
+                click_off::kill_on_click_off.run_if(input_just_pressed(MouseButton::Left)),
             );
         // .add_systems(Update, map::draw_debug);
     }

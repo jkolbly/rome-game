@@ -1,6 +1,6 @@
 use bevy::{prelude::*, ui::RelativeCursorPosition};
 
-use crate::pointer_capture::CapturesPointer;
+use crate::{click_off::KillOnClickOff, pointer_capture::CapturesPointer};
 
 /// Component for a standard UI window.
 #[derive(Component)]
@@ -24,6 +24,7 @@ pub fn generate_window(width: Val, height: Val) -> impl Bundle {
             bottom_left: Val::Percent(3.0),
             bottom_right: Val::Percent(3.0),
         },
-        Outline::new(Val::Px(1.0), Val::Px(0.0), Color::BLACK),
+        Outline::new(Val::Px(2.0), Val::ZERO, Color::BLACK),
+        KillOnClickOff,
     )
 }
