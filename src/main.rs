@@ -55,7 +55,7 @@ impl Plugin for GamePlugin {
                     mouse::mouse_button_input,
                     mouse::scroll_events,
                     city::click_city,
-                    ui::update_world_ui_positions,
+                    ui::update_world_ui_positions.after(city::click_city),
                 ),
             )
             .add_systems(
