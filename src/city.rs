@@ -59,7 +59,7 @@ pub fn click_city(
             },
         ],
         UIWorldPosition {
-            pos: t_city.translation.xy(),
+            pos: t_city.translation.xy() + Vec2::new(10.0, -10.0),
         },
     );
 }
