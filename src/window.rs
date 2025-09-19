@@ -7,13 +7,22 @@ use crate::{click_off::KillOnClickOff, pointer_capture::CapturesPointer};
 #[require(Node)]
 pub struct Window {}
 
+/// Component for an entry in a UI window.
+#[derive(Component)]
+#[require(Node)]
+pub enum WindowEntry {
+    /// Displays a fixed line of text.
+    Text { text: String },
+}
+
 pub fn generate_window<T: Bundle>(
     mut commands: Commands,
     width: Val,
     height: Val,
+    entries: Vec<WindowEntry>,
     bundle: T,
 ) -> Entity {
-    commands
+    let e_window = commands
         .spawn((
             Window {},
             Node {
@@ -35,5 +44,16 @@ pub fn generate_window<T: Bundle>(
             KillOnClickOff,
             bundle,
         ))
-        .id()
+        .id();
+
+    for entry in entries {
+        let entry_bundle = match entry {
+            WindowEntry::Text { text } => (Text::new(text)),
+        };
+
+        let entry_entity = commands.spawn(entry_bundle).id();
+        commands.entity(e_window).add_child(entry_entity);
+    }
+
+    e_window
 }

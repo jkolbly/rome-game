@@ -1,18 +1,21 @@
 use bevy::prelude::*;
+use bevy_common_assets::csv::LoadedCsv;
 use bevy_prng::WyRand;
 use bevy_rand::prelude::*;
 use rand::Rng;
 
 use crate::{
+    city_names::{CityName, NameListHandle},
     clickable::{ClickHitbox, ClickState, JustPressed},
     map::{Map, Sector},
     ui::UIWorldPosition,
-    window::generate_window,
+    window::{WindowEntry, generate_window},
 };
 
 #[derive(Component)]
 #[require(Transform)]
 pub struct City {
+    name: String,
     population: u32,
 }
 
@@ -25,6 +28,9 @@ pub fn click_city(mut commands: Commands, query: Query<(&City, &Transform), With
         commands.reborrow(),
         Val::Percent(25.0),
         Val::Percent(25.0),
+        vec![WindowEntry::Text {
+            text: city.name.to_string(),
+        }],
         UIWorldPosition {
             pos: t_city.translation.xy(),
         },
@@ -32,6 +38,8 @@ pub fn click_city(mut commands: Commands, query: Query<(&City, &Transform), With
 }
 
 pub fn spawn_cities(
+    name_list: Res<NameListHandle>,
+    names: Res<Assets<LoadedCsv<CityName>>>,
     mut commands: Commands,
     mut map_query: Query<(&Map, &mut Entropy<WyRand>)>,
     sector_query: Query<&Sector>,
@@ -39,6 +47,9 @@ pub fn spawn_cities(
     let (map, mut rng) = map_query.single_mut().unwrap();
 
     let mut city_positions: Vec<Vec2> = Vec::new();
+
+    let names_list_unwrapped = names.get(&name_list.0).unwrap();
+    let mut unused_name_indices: Vec<usize> = (0..names_list_unwrapped.rows.len()).collect();
 
     for _ in 0..1000 {
         let rand_index = rng.random_range(0..map.sectors.len());
@@ -60,9 +71,19 @@ pub fn spawn_cities(
             continue;
         }
 
+        let name_index =
+            unused_name_indices.swap_remove(rng.random_range(..unused_name_indices.len()));
+        let name = names_list_unwrapped
+            .rows
+            .get(name_index)
+            .unwrap()
+            .name
+            .to_string();
+
         city_positions.push(city_pos.clone());
         commands.spawn((
             City {
+                name,
                 population: rng.random_range(map.city_start_pop_range.clone()),
             },
             Transform::from_xyz(city_pos.x, city_pos.y, 1.0),
