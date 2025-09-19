@@ -12,6 +12,7 @@ mod clickable;
 mod keyboard;
 mod map;
 mod mouse;
+mod pointer_capture;
 mod ui;
 mod utils;
 
@@ -20,6 +21,7 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<mouse::MousePos>()
+            .init_resource::<pointer_capture::IsPointerCaptured>()
             .add_systems(
                 Startup,
                 (
@@ -35,6 +37,7 @@ impl Plugin for GamePlugin {
                 PreUpdate,
                 (
                     mouse::update_mouse_pos,
+                    pointer_capture::update_pointer_capture,
                     (
                         clickable::update_clickables,
                         clickable::remove_click_components,

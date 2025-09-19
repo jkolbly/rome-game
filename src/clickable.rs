@@ -1,4 +1,4 @@
-use crate::mouse::MousePos;
+use crate::{mouse::MousePos, pointer_capture::IsPointerCaptured};
 use bevy::prelude::*;
 
 /// A collision shape for mouse interaction.
@@ -48,6 +48,7 @@ pub struct Pressed {}
 
 /// Set the data in all Clickable components.
 pub fn update_clickables(
+    pointer_captured: Res<IsPointerCaptured>,
     mouse_pos: Res<MousePos>,
     buttons: Res<ButtonInput<MouseButton>>,
     mut query: Query<(&mut ClickState, &Transform, &ClickHitbox)>,
@@ -55,6 +56,10 @@ pub fn update_clickables(
     for (mut state, _, _) in &mut query {
         state.just_pressed = false;
         state.pressed = false;
+    }
+
+    if pointer_captured.0 {
+        return;
     }
 
     for (mut state, transform, hitbox) in query
