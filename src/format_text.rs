@@ -10,9 +10,9 @@ pub struct FormatText {
 }
 
 impl FormatText {
-    pub fn generate(&self, commands: &mut Commands) -> Entity {
+    pub fn generate<T: Bundle>(&self, commands: &mut Commands, bundle: T) -> Entity {
         commands
-            .spawn(Text::default())
+            .spawn((Text::default(), bundle))
             .with_children(|parent| {
                 for segment in &self.segments {
                     match segment {

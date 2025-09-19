@@ -11,7 +11,7 @@ use crate::{
     format_text::{FormatText, TextSegmentType, ValueExposer},
     map::{Map, Sector},
     ui::UIWorldPosition,
-    window::{WindowEntry, generate_window},
+    window::{WindowEntry, WindowEntryType, generate_window},
 };
 
 #[derive(Component)]
@@ -34,21 +34,28 @@ pub fn click_city(
         Val::Percent(25.0),
         Val::Percent(25.0),
         vec![
-            WindowEntry::Text {
-                text: city.name.to_string(),
-            },
-            WindowEntry::FormatText {
-                text: FormatText {
-                    segments: vec![
-                        TextSegmentType::Text {
-                            text: "Population: ".to_string(),
-                        },
-                        TextSegmentType::ComponentValue {
-                            entity: e_city,
-                            tag: ExposerTag::CityPopulation,
-                        },
-                    ],
+            WindowEntry {
+                entry_type: WindowEntryType::Text {
+                    text: city.name.to_string(),
                 },
+                centered: true,
+                ..WindowEntry::default()
+            },
+            WindowEntry {
+                entry_type: WindowEntryType::FormatText {
+                    text: FormatText {
+                        segments: vec![
+                            TextSegmentType::Text {
+                                text: "Population: ".to_string(),
+                            },
+                            TextSegmentType::ComponentValue {
+                                entity: e_city,
+                                tag: ExposerTag::CityPopulation,
+                            },
+                        ],
+                    },
+                },
+                ..WindowEntry::default()
             },
         ],
         UIWorldPosition {
