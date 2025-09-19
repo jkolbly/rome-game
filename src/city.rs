@@ -21,12 +21,14 @@ pub fn click_city(mut commands: Commands, query: Query<(&City, &Transform), With
         return;
     };
 
-    commands.spawn((
+    generate_window(
+        commands.reborrow(),
+        Val::Percent(25.0),
+        Val::Percent(25.0),
         UIWorldPosition {
             pos: t_city.translation.xy(),
         },
-        generate_window(Val::Percent(25.0), Val::Percent(25.0)),
-    ));
+    );
 }
 
 pub fn spawn_cities(
