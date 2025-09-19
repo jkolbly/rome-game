@@ -12,6 +12,8 @@ mod city;
 mod city_names;
 mod click_off;
 mod clickable;
+mod exposer_tags;
+mod format_text;
 mod keyboard;
 mod map;
 mod mouse;
@@ -62,7 +64,14 @@ impl Plugin for GamePlugin {
                     click_off::kill_on_click_off.run_if(input_just_pressed(MouseButton::Left)),
                 ),
             )
-            .add_systems(PostUpdate, ui::update_world_ui_positions)
+            .add_systems(
+                PostUpdate,
+                (
+                    ui::update_world_ui_positions,
+                    city::expose_cities.before(format_text::update_text_segments),
+                    format_text::update_text_segments,
+                ),
+            )
             .add_systems(
                 Update,
                 states::check_loaded.run_if(in_state(states::AppState::Loading)),

@@ -1,6 +1,6 @@
 use bevy::{prelude::*, ui::RelativeCursorPosition};
 
-use crate::{click_off::KillOnClickOff, pointer_capture::CapturesPointer};
+use crate::{click_off::KillOnClickOff, format_text::FormatText, pointer_capture::CapturesPointer};
 
 /// Component for a standard UI window.
 #[derive(Component)]
@@ -13,6 +13,9 @@ pub struct Window {}
 pub enum WindowEntry {
     /// Displays a fixed line of text.
     Text { text: String },
+
+    /// Displays reactive text based on a template.
+    FormatText { text: FormatText },
 }
 
 pub fn generate_window<T: Bundle>(
@@ -47,12 +50,11 @@ pub fn generate_window<T: Bundle>(
         .id();
 
     for entry in entries {
-        let entry_bundle = match entry {
-            WindowEntry::Text { text } => (Text::new(text)),
+        let new_entity = match entry {
+            WindowEntry::Text { text } => commands.spawn(Text::new(text)).id(),
+            WindowEntry::FormatText { text } => text.generate(&mut commands),
         };
-
-        let entry_entity = commands.spawn(entry_bundle).id();
-        commands.entity(e_window).add_child(entry_entity);
+        commands.entity(e_window).add_child(new_entity);
     }
 
     e_window

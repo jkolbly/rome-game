@@ -7,6 +7,8 @@ use rand::Rng;
 use crate::{
     city_names::{CityName, NameListHandle},
     clickable::{ClickHitbox, ClickState, JustPressed},
+    exposer_tags::ExposerTag,
+    format_text::{FormatText, TextSegmentType, ValueExposer},
     map::{Map, Sector},
     ui::UIWorldPosition,
     window::{WindowEntry, generate_window},
@@ -19,8 +21,11 @@ pub struct City {
     population: u32,
 }
 
-pub fn click_city(mut commands: Commands, query: Query<(&City, &Transform), With<JustPressed>>) {
-    let Ok((city, t_city)) = query.single() else {
+pub fn click_city(
+    mut commands: Commands,
+    query: Query<(Entity, &City, &Transform), With<JustPressed>>,
+) {
+    let Ok((e_city, city, t_city)) = query.single() else {
         return;
     };
 
@@ -28,9 +33,24 @@ pub fn click_city(mut commands: Commands, query: Query<(&City, &Transform), With
         commands.reborrow(),
         Val::Percent(25.0),
         Val::Percent(25.0),
-        vec![WindowEntry::Text {
-            text: city.name.to_string(),
-        }],
+        vec![
+            WindowEntry::Text {
+                text: city.name.to_string(),
+            },
+            WindowEntry::FormatText {
+                text: FormatText {
+                    segments: vec![
+                        TextSegmentType::Text {
+                            text: "Population: ".to_string(),
+                        },
+                        TextSegmentType::ComponentValue {
+                            entity: e_city,
+                            tag: ExposerTag::CityPopulation,
+                        },
+                    ],
+                },
+            },
+        ],
         UIWorldPosition {
             pos: t_city.translation.xy(),
         },
@@ -89,6 +109,7 @@ pub fn spawn_cities(
             Transform::from_xyz(city_pos.x, city_pos.y, 1.0),
             ClickState::default(),
             ClickHitbox::Circle { radius: 10.0 },
+            ValueExposer::default(),
         ));
 
         if city_positions.len() as u32 >= map.city_num {
@@ -110,5 +131,13 @@ pub fn add_city_meshes(
         commands
             .entity(entity)
             .insert((Mesh2d(mesh.clone()), MeshMaterial2d(material.clone())));
+    }
+}
+
+pub fn expose_cities(query: Query<(&mut ValueExposer, &City), Changed<City>>) {
+    for (mut exposer, city) in query {
+        exposer
+            .tags
+            .insert(ExposerTag::CityPopulation, city.population.to_string());
     }
 }
