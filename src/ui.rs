@@ -2,31 +2,6 @@ use bevy::{prelude::*, ui::RelativeCursorPosition};
 
 use crate::pointer_capture::CapturesPointer;
 
-/// Component for a standard UI window.
-#[derive(Component)]
-#[require(Node)]
-pub struct Window {}
-
-/// Bundle for elements of a Window.
-/// Use `WindowBundle::new()`` to construct a Window.
-#[derive(Bundle)]
-pub struct WindowBundle(Window, Node, RelativeCursorPosition, CapturesPointer);
-
-impl WindowBundle {
-    pub fn new(width: Val, height: Val) -> WindowBundle {
-        WindowBundle(
-            Window {},
-            Node {
-                width,
-                height,
-                ..Node::default()
-            },
-            RelativeCursorPosition::default(),
-            CapturesPointer,
-        )
-    }
-}
-
 /// Component for UI displayed relative to the world.
 #[derive(Component)]
 #[require(Node)]

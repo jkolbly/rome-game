@@ -15,6 +15,7 @@ mod mouse;
 mod pointer_capture;
 mod ui;
 mod utils;
+mod window;
 
 pub struct GamePlugin;
 

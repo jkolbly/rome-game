@@ -17,5 +17,4 @@ pub fn update_pointer_capture(
     ui_query: Query<&RelativeCursorPosition, With<CapturesPointer>>,
 ) {
     pointer_captured.0 = ui_query.iter().any(|cursor_pos| cursor_pos.mouse_over());
-    println!("Pointer captured: {}", pointer_captured.0);
 }

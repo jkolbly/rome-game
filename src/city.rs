@@ -6,7 +6,8 @@ use rand::Rng;
 use crate::{
     clickable::{ClickHitbox, ClickState, JustPressed},
     map::{Map, Sector},
-    ui::{self, WindowBundle},
+    ui::UIWorldPosition,
+    window::generate_window,
 };
 
 #[derive(Component)]
@@ -21,18 +22,10 @@ pub fn click_city(mut commands: Commands, query: Query<(&City, &Transform), With
     };
 
     commands.spawn((
-        ui::UIWorldPosition {
+        UIWorldPosition {
             pos: t_city.translation.xy(),
         },
-        WindowBundle::new(Val::Percent(25.0), Val::Percent(25.0)),
-        BackgroundColor(Color::srgb(0.5, 0.5, 0.5)),
-        BorderRadius {
-            top_left: Val::Percent(3.0),
-            top_right: Val::Percent(3.0),
-            bottom_left: Val::Percent(3.0),
-            bottom_right: Val::Percent(3.0),
-        },
-        Outline::new(Val::Px(1.0), Val::Px(0.0), Color::BLACK),
+        generate_window(Val::Percent(25.0), Val::Percent(25.0)),
     ));
 }
 
