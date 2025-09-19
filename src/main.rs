@@ -57,7 +57,7 @@ impl Plugin for GamePlugin {
                     city::click_city,
                 ),
             )
-            .add_systems(Last, ui::update_world_ui_positions)
+            .add_systems(PostUpdate, ui::update_world_ui_positions)
             .add_systems(
                 Update,
                 click_off::kill_on_click_off.run_if(input_just_pressed(MouseButton::Left)),
