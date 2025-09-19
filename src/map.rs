@@ -217,7 +217,7 @@ pub fn create_map(mut commands: Commands) {
             sector_num: 5000,
 
             lloyd_iters: 1,
-            generator_border: 10.0,
+            generator_border: 20.0,
             altitude_perlin_scale: 0.015,
 
             sectors: Vec::new(),
