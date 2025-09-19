@@ -13,6 +13,7 @@ pub fn generate_window(width: Val, height: Val) -> impl Bundle {
         Node {
             width,
             height,
+            border: UiRect::all(Val::Px(2.0)),
             ..Node::default()
         },
         RelativeCursorPosition::default(),
@@ -24,7 +25,7 @@ pub fn generate_window(width: Val, height: Val) -> impl Bundle {
             bottom_left: Val::Percent(3.0),
             bottom_right: Val::Percent(3.0),
         },
-        Outline::new(Val::Px(2.0), Val::ZERO, Color::BLACK),
+        BorderColor(Color::BLACK),
         KillOnClickOff,
     )
 }
