@@ -6,6 +6,7 @@ use bevy::{
 use bevy_common_assets::csv::CsvAssetPlugin;
 use bevy_prng::WyRand;
 use bevy_rand::plugin::EntropyPlugin;
+use clap::Parser;
 
 mod biome;
 mod city;
@@ -22,6 +23,18 @@ mod states;
 mod ui;
 mod utils;
 mod window;
+
+#[derive(Parser, Debug)]
+#[command(about, long_about = None)]
+pub struct Args {
+    /// Display debug gizmos.
+    #[arg(short, long)]
+    debug: bool,
+
+    /// Display performance metrics.
+    #[arg(short, long)]
+    performance: bool,
+}
 
 pub struct GamePlugin;
 
@@ -76,7 +89,23 @@ impl Plugin for GamePlugin {
                 Update,
                 states::check_loaded.run_if(in_state(states::AppState::Loading)),
             );
-        // .add_systems(Update, map::draw_debug);
+
+        let args = Args::parse();
+
+        if args.debug {
+            app.add_systems(
+                Update,
+                map::draw_debug.run_if(in_state(states::AppState::InGame)),
+            );
+        }
+
+        if args.performance {
+            app.add_plugins((
+                LogDiagnosticsPlugin::default(),
+                FrameTimeDiagnosticsPlugin::default(),
+                bevy::diagnostic::SystemInformationDiagnosticsPlugin,
+            ));
+        }
     }
 }
 
@@ -99,9 +128,6 @@ fn main() {
             EntropyPlugin::<WyRand>::default(),
             CsvAssetPlugin::<city_names::CityName>::new(&["csv"]),
             GamePlugin,
-            LogDiagnosticsPlugin::default(),
-            FrameTimeDiagnosticsPlugin::default(),
-            bevy::diagnostic::SystemInformationDiagnosticsPlugin,
         ))
         .run();
 }
