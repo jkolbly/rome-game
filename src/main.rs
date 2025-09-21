@@ -19,37 +19,72 @@ mod keyboard;
 mod map;
 mod mouse;
 mod pointer_capture;
+mod resource;
 mod states;
 mod ui;
 mod utils;
 mod window;
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Resource)]
 #[command(about, long_about = None)]
 pub struct Args {
     /// Display debug gizmos.
     #[arg(short, long)]
     debug: bool,
 
+    /// Display node connections.
+    #[arg(short = 'r', long = "debug-relations")]
+    debug_relations: bool,
+
     /// Display performance metrics.
     #[arg(short, long)]
     performance: bool,
+
+    /// The seed to use for map generation.
+    #[arg(short, long)]
+    seed: u64,
 }
 
 pub struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
+        let args = Args::parse();
+
+        if args.debug {
+            app.add_systems(
+                Update,
+                (map::draw_debug.run_if(in_state(states::AppState::InGame)),),
+            );
+        }
+
+        if args.debug_relations {
+            app.add_systems(
+                Update,
+                (resource::debug_relations.run_if(in_state(states::AppState::InGame)),),
+            );
+        }
+
+        if args.performance {
+            app.add_plugins((
+                LogDiagnosticsPlugin::default(),
+                FrameTimeDiagnosticsPlugin::default(),
+                bevy::diagnostic::SystemInformationDiagnosticsPlugin,
+            ));
+        }
+
         app.insert_state(states::AppState::Loading)
             .init_resource::<mouse::MousePos>()
             .init_resource::<pointer_capture::IsPointerCaptured>()
+            .insert_resource(args)
             .add_systems(
                 OnEnter(states::AppState::InGame),
                 (
                     map::create_map,
                     map::generate_map,
                     city::spawn_cities,
-                    city::add_city_meshes,
+                    (city::add_city_meshes, resource::spawn_resource_nodes),
+                    resource::add_node_meshes,
                 )
                     .chain(),
             )
@@ -89,23 +124,6 @@ impl Plugin for GamePlugin {
                 Update,
                 states::check_loaded.run_if(in_state(states::AppState::Loading)),
             );
-
-        let args = Args::parse();
-
-        if args.debug {
-            app.add_systems(
-                Update,
-                map::draw_debug.run_if(in_state(states::AppState::InGame)),
-            );
-        }
-
-        if args.performance {
-            app.add_plugins((
-                LogDiagnosticsPlugin::default(),
-                FrameTimeDiagnosticsPlugin::default(),
-                bevy::diagnostic::SystemInformationDiagnosticsPlugin,
-            ));
-        }
     }
 }
 

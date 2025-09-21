@@ -11,7 +11,7 @@ use noiz::prelude::*;
 use rand::{Rng, SeedableRng};
 use voronoice::*;
 
-use crate::{biome::Biome, utils};
+use crate::{Args, biome::Biome, utils};
 
 /// An entire game map, effectively a voronoi diagram.
 #[derive(Component)]
@@ -32,6 +32,11 @@ pub struct Map {
     pub city_min_spacing: f32,
     pub city_start_pop_range: Range<u32>,
     pub city_deadzone: f32,
+
+    pub nodes_per_city_range: Range<u32>,
+    pub node_city_max_dist: f32,
+    pub node_city_min_dist: f32,
+    pub node_min_spacing: f32,
 }
 
 /// A single polygon in the voronoi diagram.
@@ -72,15 +77,19 @@ pub fn generate_map(
     println!("Generating map with size: {}", map.size);
 
     let mut sites: Vec<Vec2> = Vec::new();
-    for _ in 0..map.sector_num {
-        let site = Vec2 {
-            x: rng.random_range(..(map.size.x.round() + map.generator_border * 2.0) as u32) as f32
+    for _ in 0..10000 {
+        let new_site = Vec2 {
+            x: rng.random_range(0.0..(map.size.x.round() + map.generator_border * 2.0))
                 - map.generator_border,
-            y: rng.random_range(..(map.size.y.round() + map.generator_border * 2.0) as u32) as f32
+            y: rng.random_range(0.0..(map.size.y.round() + map.generator_border * 2.0))
                 - map.generator_border,
         };
-        if !sites.contains(&site) {
-            sites.push(site);
+        if sites.iter().any(|site| site.distance(new_site) < 1.0) {
+            continue;
+        }
+        sites.push(new_site);
+        if sites.len() + 1 >= map.sector_num as usize {
+            break;
         }
     }
     println!("Generated {} sites", sites.len());
@@ -97,6 +106,8 @@ pub fn generate_map(
         .set_lloyd_relaxation_iterations(map.lloyd_iters as usize)
         .build()
         .unwrap();
+
+    println!("Sites after building mesh: {}", voronoi.sites().len());
 
     // Maps VoronoiCell site indices to entity ID's
     let mut site_to_entity: HashMap<usize, Entity> = HashMap::new();
@@ -204,17 +215,17 @@ pub fn draw_debug(mut gizmos: Gizmos, map_query: Query<&Map>, sector_query: Quer
     }
 
     let map = map_query.single().unwrap();
-    // gizmos.rect_2d(map.size / 2.0, map.size, Color::WHITE);
+    gizmos.rect_2d(map.size / 2.0, map.size, Color::WHITE);
 }
 
-pub fn create_map(mut commands: Commands) {
-    let seed: u64 = 3;
+pub fn create_map(mut commands: Commands, args: Res<Args>) {
+    let seed: u64 = args.seed;
 
     commands.spawn((
         Map {
             size: vec2(1000.0, 500.0),
 
-            sector_num: 5000,
+            sector_num: 8000,
 
             lloyd_iters: 1,
             generator_border: 20.0,
@@ -226,6 +237,11 @@ pub fn create_map(mut commands: Commands) {
             city_min_spacing: 100.0,
             city_start_pop_range: 10..1000,
             city_deadzone: 20.0,
+
+            nodes_per_city_range: 1..3,
+            node_city_max_dist: 150.0,
+            node_city_min_dist: 10.0,
+            node_min_spacing: 70.0,
         },
         Entropy::<WyRand>::seed_from_u64(seed),
         Transform::IDENTITY,

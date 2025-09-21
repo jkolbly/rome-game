@@ -20,3 +20,7 @@ pub fn area(vertices: &Vec<Vec2>) -> f32 {
         .map(|i| vertices[i].x * vertices[(i + 1) % n].y - vertices[(i + 1) % n].x * vertices[i].y)
         .sum::<f32>()
 }
+
+pub fn vec2_equals(a: &Vec2, b: &Vec2) -> bool {
+    return a.x == b.x && a.y == b.y;
+}

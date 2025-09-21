@@ -17,8 +17,9 @@ use crate::{
 #[derive(Component)]
 #[require(Transform)]
 pub struct City {
-    name: String,
-    population: u32,
+    pub name: String,
+    pub population: u32,
+    pub resource_nodes: Vec<Entity>,
 }
 
 pub fn click_city(
@@ -112,6 +113,7 @@ pub fn spawn_cities(
             City {
                 name,
                 population: rng.random_range(map.city_start_pop_range.clone()),
+                resource_nodes: Vec::new(),
             },
             Transform::from_xyz(city_pos.x, city_pos.y, 1.0),
             ClickState::default(),
