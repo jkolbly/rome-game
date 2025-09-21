@@ -37,6 +37,7 @@ pub struct Map {
     pub node_city_max_dist: f32,
     pub node_city_min_dist: f32,
     pub node_min_spacing: f32,
+    pub node_deadzone: f32,
 }
 
 /// A single polygon in the voronoi diagram.
@@ -242,6 +243,7 @@ pub fn create_map(mut commands: Commands, args: Res<Args>) {
             node_city_max_dist: 150.0,
             node_city_min_dist: 10.0,
             node_min_spacing: 70.0,
+            node_deadzone: 10.0,
         },
         Entropy::<WyRand>::seed_from_u64(seed),
         Transform::IDENTITY,

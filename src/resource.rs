@@ -60,6 +60,15 @@ pub fn spawn_resource_nodes(
             let rand_sector = map.sectors[rand_index];
             let mut node_pos = sector_query.get(rand_sector).unwrap().centroid;
 
+            // Check not outside of deadzone
+            if node_pos.x < map.node_deadzone
+                || node_pos.x > map.size.x - map.node_deadzone
+                || node_pos.y < map.node_deadzone
+                || node_pos.y > map.size.y - map.node_deadzone
+            {
+                continue;
+            }
+
             // Check not too close to a city
             if city_positions
                 .iter()
