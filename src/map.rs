@@ -47,6 +47,9 @@ pub struct Sector {
     /// The point that spawned this sector in the voronoi diagram.
     pub site: Vec2,
 
+    /// The points making up the boundary of this sector.
+    pub border: Vec<Vec2>,
+
     /// The centroid of this site's polygon.
     pub centroid: Vec2,
 
@@ -63,8 +66,6 @@ pub struct Sector {
 }
 
 pub fn generate_map(
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<ColorMaterial>>,
     mut commands: Commands,
     mut query: Query<(Entity, &mut Map, &mut Entropy<WyRand>)>,
 ) {
@@ -119,11 +120,6 @@ pub fn generate_map(
     // Maps VoronoiCell site indices to sectors
     let mut site_to_sector: HashMap<usize, Sector> = HashMap::new();
 
-    // Data to be added to map mesh
-    let mut positions: Vec<Vec3> = Vec::new();
-    let mut triangles: Vec<u32> = Vec::new();
-    let mut colors: Vec<[f32; 4]> = Vec::new();
-
     for (site_index, cell) in voronoi.iter_cells().enumerate() {
         let vertices: Vec<Vec2> = cell.iter_vertices().map(point_to_vec2).collect();
 
@@ -133,23 +129,12 @@ pub fn generate_map(
         let sector = Sector {
             site,
             centroid,
+            border: vertices,
             height,
             biome: Biome::Plains,
             cost: 1.0,
             neighbors: Vec::new(),
         };
-
-        let index_offset = positions.len() as u32;
-        for i in 1..vertices.len() - 1 {
-            triangles.push(index_offset as u32);
-            triangles.push(i as u32 + index_offset);
-            triangles.push(i as u32 + index_offset + 1);
-        }
-        let color = Color::srgb(0.5, height, 0.5);
-        for vertex in vertices {
-            positions.push(vertex.extend(0.0));
-            colors.push(color.to_linear().to_f32_array());
-        }
 
         let sector_entity = commands.spawn(()).id();
 
@@ -172,6 +157,37 @@ pub fn generate_map(
             .entity(*site_to_entity.get(&site_index).unwrap())
             .insert(site_to_sector.remove(&site_index).unwrap());
     }
+}
+
+pub fn add_map_mesh(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    map_query: Query<(Entity, &Map)>,
+    sector_query: Query<&Sector>,
+) {
+    // Data to be added to map mesh
+    let mut positions: Vec<Vec3> = Vec::new();
+    let mut triangles: Vec<u32> = Vec::new();
+    let mut colors: Vec<[f32; 4]> = Vec::new();
+
+    let (e_map, map) = map_query.single().unwrap();
+
+    for e_sector in &map.sectors {
+        let sector = sector_query.get(*e_sector).unwrap();
+
+        let index_offset = positions.len() as u32;
+        for i in 1..sector.border.len() - 1 {
+            triangles.push(index_offset as u32);
+            triangles.push(i as u32 + index_offset);
+            triangles.push(i as u32 + index_offset + 1);
+        }
+        let color = Color::srgb(0.5, sector.height, 0.5);
+        for vertex in &sector.border {
+            positions.push(vertex.extend(0.0));
+            colors.push(color.to_linear().to_f32_array());
+        }
+    }
 
     let mesh = Mesh::new(
         PrimitiveTopology::TriangleList,
@@ -188,7 +204,7 @@ pub fn generate_map(
             Transform::from_xyz(0.0, 0.0, 0.0),
         ))
         .id();
-    commands.entity(entity).add_child(mesh_entity);
+    commands.entity(e_map).add_child(mesh_entity);
 }
 
 fn vec2_to_point(v: &Vec2) -> Point {
