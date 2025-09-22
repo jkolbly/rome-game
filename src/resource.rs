@@ -22,8 +22,9 @@ pub enum Resource {
 #[derive(Component)]
 #[require(Transform)]
 pub struct ResourceNode {
-    node_type: ResourceNodeType,
-    produces: Resource,
+    pub node_type: ResourceNodeType,
+    pub produces: Resource,
+    pub sector: Entity,
 }
 
 /// A type of [`ResourceNode`]
@@ -121,6 +122,7 @@ pub fn spawn_resource_nodes(
                     ResourceNode {
                         node_type,
                         produces,
+                        sector: rand_sector,
                     },
                     Transform::from_translation(node_pos.extend(0.0)),
                 ))

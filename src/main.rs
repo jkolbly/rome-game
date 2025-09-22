@@ -20,6 +20,7 @@ mod map;
 mod mouse;
 mod pointer_capture;
 mod resource;
+mod road;
 mod states;
 mod ui;
 mod utils;
@@ -35,6 +36,10 @@ pub struct Args {
     /// Display node connections.
     #[arg(short = 'r', long = "debug-relations")]
     debug_relations: bool,
+
+    /// Display road gizmos.
+    #[arg(long = "debug-roads")]
+    debug_roads: bool,
 
     /// Display performance metrics.
     #[arg(short, long)]
@@ -54,14 +59,21 @@ impl Plugin for GamePlugin {
         if args.debug {
             app.add_systems(
                 Update,
-                (map::draw_debug.run_if(in_state(states::AppState::InGame)),),
+                map::draw_debug.run_if(in_state(states::AppState::InGame)),
             );
         }
 
         if args.debug_relations {
             app.add_systems(
                 Update,
-                (resource::debug_relations.run_if(in_state(states::AppState::InGame)),),
+                resource::debug_relations.run_if(in_state(states::AppState::InGame)),
+            );
+        }
+
+        if args.debug_roads {
+            app.add_systems(
+                Update,
+                road::debug_roads.run_if(in_state(states::AppState::InGame)),
             );
         }
 
@@ -85,6 +97,7 @@ impl Plugin for GamePlugin {
                     city::spawn_cities,
                     (city::add_city_meshes, resource::spawn_resource_nodes),
                     resource::add_node_meshes,
+                    road::spawn_roads,
                 )
                     .chain(),
             )

@@ -45,18 +45,21 @@ pub struct Map {
 #[require(Mesh2d, Transform)]
 pub struct Sector {
     /// The point that spawned this sector in the voronoi diagram.
-    site: Vec2,
+    pub site: Vec2,
 
     /// The centroid of this site's polygon.
     pub centroid: Vec2,
 
     /// The height of this sector on the map.
-    height: f32,
+    pub height: f32,
 
-    biome: Biome,
+    pub biome: Biome,
+
+    /// The cost per unit of traversing this sector (for road pathfinding).
+    pub cost: f32,
 
     /// This sector's neighbors.
-    neighbors: Vec<Entity>,
+    pub neighbors: Vec<Entity>,
 }
 
 pub fn generate_map(
@@ -132,6 +135,7 @@ pub fn generate_map(
             centroid,
             height,
             biome: Biome::Plains,
+            cost: 1.0,
             neighbors: Vec::new(),
         };
 
