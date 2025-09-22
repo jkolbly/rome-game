@@ -93,7 +93,7 @@ pub fn generate_map(
             continue;
         }
         sites.push(new_site);
-        if sites.len() + 1 >= map.sector_num as usize {
+        if sites.len() >= map.sector_num as usize {
             break;
         }
     }
