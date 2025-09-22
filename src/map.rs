@@ -232,9 +232,9 @@ pub fn create_map(mut commands: Commands, args: Res<Args>) {
 
             sector_num: 8000,
 
-            lloyd_iters: 1,
+            lloyd_iters: 5,
             generator_border: 20.0,
-            altitude_perlin_scale: 0.015,
+            altitude_perlin_scale: 0.008,
 
             sectors: Vec::new(),
 
@@ -245,7 +245,7 @@ pub fn create_map(mut commands: Commands, args: Res<Args>) {
 
             nodes_per_city_range: 1..3,
             node_city_max_dist: 150.0,
-            node_city_min_dist: 10.0,
+            node_city_min_dist: 20.0,
             node_min_spacing: 70.0,
             node_deadzone: 10.0,
         },
