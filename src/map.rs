@@ -19,14 +19,16 @@ use crate::{Args, biome::Biome, utils};
 pub struct Map {
     pub size: Vec2,
 
-    sector_num: u32,
+    pub sector_num: u32,
 
-    lloyd_iters: u32,
-    generator_border: f32,
-    altitude_perlin_scale: f32,
+    pub lloyd_iters: u32,
+    pub generator_border: f32,
+    pub altitude_perlin_scale: f32,
 
     /// A list of all the sectors in the map.
     pub sectors: Vec<Entity>,
+
+    pub biome_seed_num: u32,
 
     pub city_num: u32,
     pub city_min_spacing: f32,
@@ -56,7 +58,7 @@ pub struct Sector {
     /// The height of this sector on the map.
     pub height: f32,
 
-    pub biome: Biome,
+    pub biome: Option<Biome>,
 
     /// The cost per unit of traversing this sector (for road pathfinding).
     pub cost: f32,
@@ -131,7 +133,7 @@ pub fn generate_map(
             centroid,
             border: vertices,
             height,
-            biome: Biome::Plains,
+            biome: None,
             cost: 1.0,
             neighbors: Vec::new(),
         };
@@ -182,7 +184,11 @@ pub fn add_map_mesh(
             triangles.push(i as u32 + index_offset);
             triangles.push(i as u32 + index_offset + 1);
         }
-        let color = Color::srgb(0.5, sector.height, 0.5);
+        let color = match sector.biome.unwrap() {
+            Biome::Plains => Color::srgb_u8(255, 250, 205).darker(sector.height / 2.0),
+            Biome::Forest => Color::srgb_u8(34, 139, 34).darker(sector.height / 8.0),
+            Biome::Desert => Color::srgb_u8(255, 255, 224).darker(sector.height / 2.0),
+        };
         for vertex in &sector.border {
             positions.push(vertex.extend(0.0));
             colors.push(color.to_linear().to_f32_array());
@@ -253,6 +259,8 @@ pub fn create_map(mut commands: Commands, args: Res<Args>) {
             altitude_perlin_scale: 0.008,
 
             sectors: Vec::new(),
+
+            biome_seed_num: 60,
 
             city_num: 10,
             city_min_spacing: 100.0,
