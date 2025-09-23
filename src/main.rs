@@ -98,7 +98,8 @@ impl Plugin for GamePlugin {
                     (map::add_map_mesh, city::spawn_cities),
                     (city::add_city_meshes, resource::spawn_resource_nodes),
                     resource::add_node_meshes,
-                    road::spawn_roads,
+                    road::spawn_node_roads,
+                    road::add_road_meshes,
                 )
                     .chain(),
             )

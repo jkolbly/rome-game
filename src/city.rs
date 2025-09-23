@@ -132,6 +132,7 @@ pub fn spawn_cities(
             ClickState::default(),
             ClickHitbox::Circle { radius: 10.0 },
             ValueExposer::default(),
+            Visibility::Visible,
         ));
 
         if city_positions.len() as u32 >= map.city_num {

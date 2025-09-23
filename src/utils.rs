@@ -1,6 +1,11 @@
 use std::collections::{BinaryHeap, HashMap};
 
-use bevy::{ecs::query::QueryEntityError, prelude::*};
+use bevy::{
+    asset::RenderAssetUsages,
+    ecs::query::QueryEntityError,
+    prelude::*,
+    render::mesh::{Indices, PrimitiveTopology},
+};
 
 use crate::map::Sector;
 
@@ -143,3 +148,107 @@ impl PartialEq for BorderSorter {
 }
 
 impl Eq for BorderSorter {}
+
+/// Creates a line mesh from a set of points
+pub fn line_mesh(path: &Vec<Vec2>, width: f32) -> Mesh {
+    let point_neighbors = |point: Vec2, facing: Vec2| -> (Vec2, Vec2) {
+        let perp = facing.perp().normalize() * width;
+
+        // Output is (left, right)
+        (point + perp, point - perp)
+    };
+
+    // Data to be added to map mesh
+    let mut positions: Vec<Vec3> = Vec::new();
+    let mut triangles: Vec<u32> = Vec::new();
+
+    // let mut path_iter = road.path.iter().peekable();
+    let mut path_iter = path.iter().peekable();
+    let mut prev_coords = *path_iter.next().unwrap();
+
+    let (first_left, first_right) = {
+        let second_coords = **path_iter.peek().unwrap();
+        point_neighbors(prev_coords, second_coords - prev_coords)
+    };
+    positions.push(first_left.extend(0.0));
+    positions.push(first_right.extend(0.0));
+    triangles.push(0);
+    triangles.push(1);
+
+    while let Some(curr_coords) = path_iter.next() {
+        let (curr_left, curr_right) = point_neighbors(*curr_coords, curr_coords - prev_coords);
+
+        if let Some(next_coords) = path_iter.peek() {
+            let (next_left, next_right) = point_neighbors(*curr_coords, *next_coords - curr_coords);
+
+            let curr_left_dir = curr_left - curr_coords;
+            let next_left_dir = next_left - curr_coords;
+            let left_hand = (curr_left_dir.x * next_left_dir.y - next_left_dir.x * curr_left_dir.y)
+                .total_cmp(&0.0);
+            match left_hand {
+                std::cmp::Ordering::Greater => {
+                    // Acute angle on the left
+                    let curr_left_adj =
+                        (curr_left_dir + next_left_dir).normalize() * width + curr_coords;
+                    triangles.push(positions.len() as u32);
+                    positions.push(curr_left_adj.extend(0.0));
+                    triangles.push(positions.len() as u32);
+                    positions.push(curr_right.extend(0.0));
+                    triangles.push(positions.len() as u32 - 2);
+                    triangles.push(positions.len() as u32);
+                    positions.push(next_right.extend(0.0));
+                }
+                std::cmp::Ordering::Equal => {
+                    // Lines are parallel
+                    triangles.push(positions.len() as u32);
+                    positions.push(curr_left.extend(0.0));
+                    triangles.push(positions.len() as u32);
+                    positions.push(curr_right.extend(0.0));
+                }
+                std::cmp::Ordering::Less => {
+                    // Acute angle on the right
+                    let curr_right_dir = curr_right - curr_coords;
+                    let next_right_dir = next_right - curr_coords;
+                    let curr_right_adj =
+                        (curr_right_dir + next_right_dir).normalize() * width + curr_coords;
+                    triangles.push(positions.len() as u32);
+                    positions.push(curr_left.extend(0.0));
+                    triangles.push(positions.len() as u32);
+                    positions.push(curr_right_adj.extend(0.0));
+                    triangles.push(positions.len() as u32);
+                    positions.push(next_left.extend(0.0));
+                    triangles.push(positions.len() as u32 - 2);
+                }
+            };
+
+            prev_coords = *curr_coords;
+        } else {
+            // This is the end, add the last two vertices
+            triangles.push(positions.len() as u32);
+            positions.push(curr_left.extend(0.0));
+            triangles.push(positions.len() as u32);
+            positions.push(curr_right.extend(0.0));
+        }
+    }
+
+    Mesh::new(
+        PrimitiveTopology::TriangleStrip,
+        RenderAssetUsages::RENDER_WORLD,
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, positions)
+    .with_inserted_indices(Indices::U32(triangles))
+}
+
+/// Create a new path by using an existing path as Bezier control points.
+pub fn bezier_path(mut path: Vec<Vec2>, subdivisions: usize) -> Vec<Vec2> {
+    let last = *path.last().unwrap();
+    let mut new_path: Vec<Vec2> = vec![path[0], path[0]];
+    new_path.append(&mut path);
+    new_path.push(last);
+    new_path.push(last);
+    CubicBSpline::new(new_path)
+        .to_curve()
+        .unwrap()
+        .iter_positions(subdivisions)
+        .collect()
+}

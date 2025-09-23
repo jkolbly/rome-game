@@ -269,7 +269,7 @@ pub fn create_map(mut commands: Commands, args: Res<Args>) {
             city_deadzone: 20.0,
 
             nodes_per_city_range: 1..3,
-            node_city_max_dist: 150.0,
+            node_city_max_dist: 100.0,
             node_city_min_dist: 20.0,
             node_min_spacing: 70.0,
             node_deadzone: 10.0,
