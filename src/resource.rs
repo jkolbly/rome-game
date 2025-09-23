@@ -58,8 +58,9 @@ pub fn spawn_resource_nodes(
             }
 
             let rand_index = rng.random_range(0..map.sectors.len());
-            let rand_sector = map.sectors[rand_index];
-            let mut node_pos = sector_query.get(rand_sector).unwrap().centroid;
+            let e_sector = map.sectors[rand_index];
+            let sector = sector_query.get(e_sector).unwrap();
+            let mut node_pos = sector.centroid;
 
             // Check not outside of deadzone
             if node_pos.x < map.node_deadzone
@@ -100,11 +101,12 @@ pub fn spawn_resource_nodes(
                 continue;
             }
 
-            let node_type: ResourceNodeType = match rng.random_range(0..3) {
-                0 => ResourceNodeType::Farm,
-                1 => ResourceNodeType::Lumbermill,
-                2 => ResourceNodeType::Mine,
-                _ => unreachable!(),
+            // Get node type and check not in desert
+            let node_type = match sector.biome.unwrap() {
+                crate::biome::Biome::Plains => ResourceNodeType::Farm,
+                crate::biome::Biome::Forest => ResourceNodeType::Lumbermill,
+                crate::biome::Biome::Mountains => ResourceNodeType::Mine,
+                crate::biome::Biome::Desert => continue,
             };
             let produces = match node_type {
                 ResourceNodeType::Farm => Resource::Wheat,
@@ -122,7 +124,7 @@ pub fn spawn_resource_nodes(
                     ResourceNode {
                         node_type,
                         produces,
-                        sector: rand_sector,
+                        sector: e_sector,
                     },
                     Transform::from_translation(node_pos.extend(0.0)),
                 ))

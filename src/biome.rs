@@ -11,6 +11,7 @@ use crate::map::{Map, Sector};
 pub enum Biome {
     Plains,
     Forest,
+    Mountains,
     Desert,
 }
 
@@ -32,10 +33,11 @@ pub fn generate_biomes(
             continue;
         }
 
-        let biome_type: Biome = match rng.random_range(0..3) {
+        let biome_type: Biome = match rng.random_range(0..4) {
             0 => Biome::Plains,
             1 => Biome::Forest,
-            2 => Biome::Desert,
+            2 => Biome::Mountains,
+            3 => Biome::Desert,
             _ => unreachable!(),
         };
 
@@ -58,6 +60,12 @@ pub fn generate_biomes(
             continue;
         }
 
+        sector.cost = match biome {
+            Biome::Plains => 1.0,
+            Biome::Forest => 5.0,
+            Biome::Mountains => 10.0,
+            Biome::Desert => 1.0,
+        };
         sector.biome = Some(biome);
 
         for neighbor in &sector.neighbors {

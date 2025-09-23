@@ -84,7 +84,7 @@ pub fn generate_map(
     println!("Generating map with size: {}", map.size);
 
     let mut sites: Vec<Vec2> = Vec::new();
-    for _ in 0..10000 {
+    for _ in 0..1000000 {
         let new_site = Vec2 {
             x: rng.random_range(0.0..(map.size.x.round() + map.generator_border * 2.0))
                 - map.generator_border,
@@ -185,9 +185,10 @@ pub fn add_map_mesh(
             triangles.push(i as u32 + index_offset + 1);
         }
         let color = match sector.biome.unwrap() {
-            Biome::Plains => Color::srgb_u8(255, 250, 205).darker(sector.height / 2.0),
+            Biome::Plains => Color::srgb_u8(124, 252, 0).darker(sector.height / 2.0),
             Biome::Forest => Color::srgb_u8(34, 139, 34).darker(sector.height / 8.0),
             Biome::Desert => Color::srgb_u8(255, 255, 224).darker(sector.height / 2.0),
+            Biome::Mountains => Color::srgb_u8(169, 169, 169).darker(sector.height / 4.0),
         };
         for vertex in &sector.border {
             positions.push(vertex.extend(0.0));
@@ -252,7 +253,7 @@ pub fn create_map(mut commands: Commands, args: Res<Args>) {
         Map {
             size: vec2(1000.0, 500.0),
 
-            sector_num: 8000,
+            sector_num: 16000,
 
             lloyd_iters: 5,
             generator_border: 20.0,
@@ -260,7 +261,7 @@ pub fn create_map(mut commands: Commands, args: Res<Args>) {
 
             sectors: Vec::new(),
 
-            biome_seed_num: 60,
+            biome_seed_num: 120,
 
             city_num: 10,
             city_min_spacing: 100.0,

@@ -82,9 +82,11 @@ pub fn spawn_cities(
 
     for _ in 0..1000 {
         let rand_index = rng.random_range(0..map.sectors.len());
-        let rand_sector = map.sectors[rand_index];
-        let city_pos = sector_query.get(rand_sector).unwrap().centroid;
+        let e_sector = map.sectors[rand_index];
+        let sector = sector_query.get(e_sector).unwrap();
+        let city_pos = sector.centroid;
 
+        // Check not within deadzone
         if city_pos.x < map.city_deadzone
             || city_pos.x > map.size.x - map.city_deadzone
             || city_pos.y < map.city_deadzone
@@ -93,11 +95,20 @@ pub fn spawn_cities(
             continue;
         }
 
+        // Check not too close to another city
         if city_positions
             .iter()
             .any(|p| p.distance_squared(city_pos) < map.city_min_spacing * map.city_min_spacing)
         {
             continue;
+        }
+
+        // Check in a valid biome
+        match sector.biome.unwrap() {
+            crate::biome::Biome::Forest | crate::biome::Biome::Mountains => {
+                continue;
+            }
+            crate::biome::Biome::Plains | crate::biome::Biome::Desert => {}
         }
 
         let name_index =
@@ -115,7 +126,7 @@ pub fn spawn_cities(
                 name,
                 population: rng.random_range(map.city_start_pop_range.clone()),
                 resource_nodes: Vec::new(),
-                sector: rand_sector,
+                sector: e_sector,
             },
             Transform::from_xyz(city_pos.x, city_pos.y, 1.0),
             ClickState::default(),
