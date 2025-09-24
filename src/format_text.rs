@@ -6,11 +6,30 @@ use crate::exposer_tags::ExposerTag;
 
 /// Struct for spawning reactive text made up of segments.
 pub struct FormatText {
-    pub segments: Vec<TextSegmentType>,
+    segments: Vec<TextSegmentType>,
 }
 
 impl FormatText {
-    pub fn generate<T: Bundle>(&self, commands: &mut Commands, bundle: T) -> Entity {
+    pub fn new() -> FormatText {
+        FormatText {
+            segments: Vec::new(),
+        }
+    }
+
+    pub fn add_text(mut self, text: &str) -> FormatText {
+        self.segments.push(TextSegmentType::Text {
+            text: text.to_string(),
+        });
+        self
+    }
+
+    pub fn add_component_value(mut self, entity: Entity, tag: ExposerTag) -> FormatText {
+        self.segments
+            .push(TextSegmentType::ComponentValue { entity, tag });
+        self
+    }
+
+    pub fn spawn<T: Bundle>(&self, commands: &mut Commands, bundle: T) -> Entity {
         commands
             .spawn((Text::default(), bundle))
             .with_children(|parent| {

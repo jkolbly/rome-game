@@ -10,11 +10,10 @@ use crate::{
     clickable::{ClickHitbox, ClickState, JustPressed},
     demographic::{Demographic, JobType},
     exposer_tags::ExposerTag,
-    format_text::{FormatText, TextSegmentType, ValueExposer},
+    format_text::{FormatText, ValueExposer},
     map::{Map, Sector},
     settings::MapGenSettings,
-    ui::UIWorldPosition,
-    window::{WindowEntry, WindowEntryType, generate_window},
+    window::{EntryBuilder, WindowBuilder},
 };
 
 #[derive(Component)]
@@ -36,39 +35,17 @@ pub fn click_city(
         return;
     };
 
-    generate_window(
-        commands.reborrow(),
-        Val::Percent(25.0),
-        Val::Percent(25.0),
-        vec![
-            WindowEntry {
-                entry_type: WindowEntryType::Text {
-                    text: city.name.to_string(),
-                },
-                centered: true,
-                ..WindowEntry::default()
-            },
-            WindowEntry {
-                entry_type: WindowEntryType::FormatText {
-                    text: FormatText {
-                        segments: vec![
-                            TextSegmentType::Text {
-                                text: "Population: ".to_string(),
-                            },
-                            TextSegmentType::ComponentValue {
-                                entity: e_city,
-                                tag: ExposerTag::CityPopulation,
-                            },
-                        ],
-                    },
-                },
-                ..WindowEntry::default()
-            },
-        ],
-        UIWorldPosition {
-            pos: t_city.translation.xy() + Vec2::new(10.0, -10.0),
-        },
-    );
+    WindowBuilder::new()
+        .width(Val::Percent(25.0))
+        .height(Val::Percent(25.0))
+        .add_entry(EntryBuilder::text(&city.name).centered())
+        .add_entry(EntryBuilder::formatted_text(
+            FormatText::new()
+                .add_text("Population: ")
+                .add_component_value(e_city, ExposerTag::CityPopulation),
+        ))
+        .anchored(t_city.translation.xy() + Vec2::new(10.0, -10.0))
+        .spawn(&mut commands);
 }
 
 pub fn spawn_cities(
@@ -168,14 +145,14 @@ pub fn add_city_meshes(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    city_query: Query<(Entity, &City)>,
+    city_query: Query<Entity, With<City>>,
 ) {
     let material = materials.add(Color::BLACK);
     let mesh = meshes.add(Circle::new(10.0));
 
-    for (entity, city) in city_query {
+    for e_city in city_query {
         commands
-            .entity(entity)
+            .entity(e_city)
             .insert((Mesh2d(mesh.clone()), MeshMaterial2d(material.clone())));
     }
 }
