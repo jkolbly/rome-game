@@ -36,7 +36,7 @@ pub fn click_city(
     };
 
     WindowBuilder::new()
-        .width(Val::Percent(25.0))
+        .width(Val::Percent(20.0))
         .height(Val::Percent(25.0))
         .add_entry(EntryBuilder::text(&city.name).centered())
         .add_entry(EntryBuilder::formatted_text(
@@ -44,7 +44,30 @@ pub fn click_city(
                 .add_text("Population: ")
                 .add_component_value(e_city, ExposerTag::CityPopulation),
         ))
+        .add_entry(
+            EntryBuilder::button("Open Subwindow")
+                .open_subwindow(
+                    WindowBuilder::new()
+                        .width(Val::Percent(15.0))
+                        .height(Val::Percent(15.0))
+                        .left(Val::Percent(5.0))
+                        .top(Val::Percent(10.0))
+                        .add_entry(EntryBuilder::text("Subwindow!").centered())
+                        .add_entry(
+                            EntryBuilder::button("Another One...").open_subwindow(
+                                WindowBuilder::new()
+                                    .left(Val::Percent(5.0))
+                                    .top(Val::Percent(30.0))
+                                    .width(Val::Percent(15.0))
+                                    .height(Val::Percent(15.0))
+                                    .add_entry(EntryBuilder::text("Subwindow 2!").centered()),
+                            ),
+                        ),
+                )
+                .centered(),
+        )
         .anchored(t_city.translation.xy() + Vec2::new(10.0, -10.0))
+        .click_off()
         .spawn(&mut commands);
 }
 

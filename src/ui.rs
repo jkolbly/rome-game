@@ -3,7 +3,7 @@ use bevy::{prelude::*, ui::RelativeCursorPosition};
 use crate::pointer_capture::CapturesPointer;
 
 /// Component for UI displayed relative to the world.
-#[derive(Component)]
+#[derive(Component, Clone)]
 #[require(Node)]
 pub struct UIWorldPosition {
     pub pos: Vec2,

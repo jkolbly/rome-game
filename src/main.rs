@@ -153,6 +153,7 @@ impl Plugin for GamePlugin {
                     click_off::kill_on_click_off.run_if(input_just_pressed(MouseButton::Left)),
                     demographic::update_demographics,
                     demographic::update_city_pop.after(demographic::update_demographics),
+                    window::toggle_visibility_buttons,
                 ),
             )
             .add_systems(
@@ -161,6 +162,9 @@ impl Plugin for GamePlugin {
                     ui::update_world_ui_positions,
                     city::expose_cities.before(format_text::update_text_segments),
                     format_text::update_text_segments,
+                    window::despawn_subwindows.before(click_off::despawn),
+                    window::update_parent_subwindows.before(click_off::despawn),
+                    click_off::despawn,
                 ),
             )
             .add_systems(

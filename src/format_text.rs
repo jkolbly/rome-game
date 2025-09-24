@@ -5,6 +5,7 @@ use bevy::prelude::*;
 use crate::exposer_tags::ExposerTag;
 
 /// Struct for spawning reactive text made up of segments.
+#[derive(Clone)]
 pub struct FormatText {
     segments: Vec<TextSegmentType>,
 }
@@ -51,6 +52,7 @@ impl FormatText {
 }
 
 /// Type of data to display in a segment of a [`FormatText`].
+#[derive(Clone)]
 pub enum TextSegmentType {
     /// Displays a static piece of text.
     Text { text: String },
