@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{platform::collections::HashMap, prelude::*};
 use bevy_common_assets::csv::LoadedCsv;
 use bevy_prng::WyRand;
 use bevy_rand::prelude::*;
@@ -7,6 +7,7 @@ use rand::Rng;
 use crate::{
     city_names::{CityName, NameListHandle},
     clickable::{ClickHitbox, ClickState, JustPressed},
+    demographic::{Demographic, JobType},
     exposer_tags::ExposerTag,
     format_text::{FormatText, TextSegmentType, ValueExposer},
     map::{Map, Sector},
@@ -22,6 +23,8 @@ pub struct City {
     pub population: u32,
     pub resource_nodes: Vec<Entity>,
     pub sector: Entity,
+
+    pub demographics: HashMap<JobType, Entity>,
 }
 
 pub fn click_city(
@@ -122,19 +125,37 @@ pub fn spawn_cities(
             .to_string();
 
         city_positions.push(city_pos.clone());
-        commands.spawn((
-            City {
-                name,
-                population: rng.random_range(settings.city_start_pop_range.clone()),
-                resource_nodes: Vec::new(),
-                sector: e_sector,
-            },
-            Transform::from_xyz(city_pos.x, city_pos.y, 1.0),
-            ClickState::default(),
-            ClickHitbox::Circle { radius: 10.0 },
-            ValueExposer::default(),
-            Visibility::Visible,
-        ));
+        let total_pop = rng.random_range(settings.city_start_pop_range.clone());
+        let mut demographics = HashMap::new();
+        demographics.insert(
+            JobType::Unemployed,
+            commands
+                .spawn(Demographic {
+                    population: total_pop,
+                    job: JobType::Unemployed,
+                })
+                .id(),
+        );
+        let e_city = commands
+            .spawn((
+                City {
+                    name,
+                    population: total_pop,
+                    resource_nodes: Vec::new(),
+                    sector: e_sector,
+                    demographics: demographics.clone(),
+                },
+                Transform::from_xyz(city_pos.x, city_pos.y, 1.0),
+                ClickState::default(),
+                ClickHitbox::Circle { radius: 10.0 },
+                ValueExposer::default(),
+                Visibility::Visible,
+            ))
+            .id();
+
+        for e_demo in demographics.values() {
+            commands.entity(e_city).add_child(*e_demo);
+        }
 
         if city_positions.len() as u32 >= settings.city_num {
             break;

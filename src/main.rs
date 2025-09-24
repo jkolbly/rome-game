@@ -13,6 +13,7 @@ mod city;
 mod city_names;
 mod click_off;
 mod clickable;
+mod demographic;
 mod exposer_tags;
 mod format_text;
 mod keyboard;
@@ -149,6 +150,8 @@ impl Plugin for GamePlugin {
                     mouse::scroll_events,
                     city::click_city,
                     click_off::kill_on_click_off.run_if(input_just_pressed(MouseButton::Left)),
+                    demographic::update_demographics,
+                    demographic::update_city_pop.after(demographic::update_demographics),
                 ),
             )
             .add_systems(
