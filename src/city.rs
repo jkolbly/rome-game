@@ -10,6 +10,7 @@ use crate::{
     exposer_tags::ExposerTag,
     format_text::{FormatText, TextSegmentType, ValueExposer},
     map::{Map, Sector},
+    settings::MapGenSettings,
     ui::UIWorldPosition,
     window::{WindowEntry, WindowEntryType, generate_window},
 };
@@ -72,6 +73,7 @@ pub fn spawn_cities(
     mut commands: Commands,
     mut map_query: Query<(&Map, &mut Entropy<WyRand>)>,
     sector_query: Query<&Sector>,
+    settings: Res<MapGenSettings>,
 ) {
     let (map, mut rng) = map_query.single_mut().unwrap();
 
@@ -87,19 +89,18 @@ pub fn spawn_cities(
         let city_pos = sector.centroid;
 
         // Check not within deadzone
-        if city_pos.x < map.city_deadzone
-            || city_pos.x > map.size.x - map.city_deadzone
-            || city_pos.y < map.city_deadzone
-            || city_pos.y > map.size.y - map.city_deadzone
+        if city_pos.x < settings.city_deadzone
+            || city_pos.x > settings.size.x - settings.city_deadzone
+            || city_pos.y < settings.city_deadzone
+            || city_pos.y > settings.size.y - settings.city_deadzone
         {
             continue;
         }
 
         // Check not too close to another city
-        if city_positions
-            .iter()
-            .any(|p| p.distance_squared(city_pos) < map.city_min_spacing * map.city_min_spacing)
-        {
+        if city_positions.iter().any(|p| {
+            p.distance_squared(city_pos) < settings.city_min_spacing * settings.city_min_spacing
+        }) {
             continue;
         }
 
@@ -124,7 +125,7 @@ pub fn spawn_cities(
         commands.spawn((
             City {
                 name,
-                population: rng.random_range(map.city_start_pop_range.clone()),
+                population: rng.random_range(settings.city_start_pop_range.clone()),
                 resource_nodes: Vec::new(),
                 sector: e_sector,
             },
@@ -135,7 +136,7 @@ pub fn spawn_cities(
             Visibility::Visible,
         ));
 
-        if city_positions.len() as u32 >= map.city_num {
+        if city_positions.len() as u32 >= settings.city_num {
             break;
         }
     }

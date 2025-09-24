@@ -8,6 +8,7 @@ use crate::{
     city::City,
     map::Sector,
     resource::ResourceNode,
+    settings::DisplaySettings,
     utils::{self, bezier_path, line_mesh},
 };
 
@@ -46,6 +47,7 @@ pub fn add_road_meshes(
     mut materials: ResMut<Assets<ColorMaterial>>,
     road_query: Query<(Entity, &Road), Without<Mesh2d>>,
     sector_query: Query<&Sector>,
+    settings: Res<DisplaySettings>,
 ) {
     for (e_road, road) in road_query {
         let path = road
@@ -55,7 +57,7 @@ pub fn add_road_meshes(
             .collect();
         let bezier = bezier_path(path, 150);
 
-        let mesh = line_mesh(&bezier, 2.0);
+        let mesh = line_mesh(&bezier, settings.road_width / 2.0);
         let mesh_handle = meshes.add(mesh);
         let mesh_entity = commands
             .spawn((

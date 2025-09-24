@@ -11,35 +11,14 @@ use noiz::prelude::*;
 use rand::{Rng, SeedableRng};
 use voronoice::*;
 
-use crate::{Args, biome::Biome, utils};
+use crate::{Args, biome::Biome, settings::MapGenSettings, utils};
 
 /// An entire game map, effectively a voronoi diagram.
 #[derive(Component)]
 #[require(Entropy<WyRand>, Transform)]
 pub struct Map {
-    pub size: Vec2,
-
-    pub sector_num: u32,
-
-    pub lloyd_iters: u32,
-    pub generator_border: f32,
-    pub altitude_perlin_scale: f32,
-
     /// A list of all the sectors in the map.
     pub sectors: Vec<Entity>,
-
-    pub biome_seed_num: u32,
-
-    pub city_num: u32,
-    pub city_min_spacing: f32,
-    pub city_start_pop_range: Range<u32>,
-    pub city_deadzone: f32,
-
-    pub nodes_per_city_range: Range<u32>,
-    pub node_city_max_dist: f32,
-    pub node_city_min_dist: f32,
-    pub node_min_spacing: f32,
-    pub node_deadzone: f32,
 }
 
 /// A single polygon in the voronoi diagram.
@@ -70,6 +49,7 @@ pub struct Sector {
 pub fn generate_map(
     mut commands: Commands,
     mut query: Query<(Entity, &mut Map, &mut Entropy<WyRand>)>,
+    settings: Res<MapGenSettings>,
 ) {
     let (entity, mut map, mut rng) = query.single_mut().unwrap();
 
@@ -81,36 +61,36 @@ pub fn generate_map(
     )>::default();
     perlin_noise.set_seed(rng.random());
 
-    println!("Generating map with size: {}", map.size);
+    println!("Generating map with size: {}", settings.size);
 
     let mut sites: Vec<Vec2> = Vec::new();
     for _ in 0..1000000 {
         let new_site = Vec2 {
-            x: rng.random_range(0.0..(map.size.x.round() + map.generator_border * 2.0))
-                - map.generator_border,
-            y: rng.random_range(0.0..(map.size.y.round() + map.generator_border * 2.0))
-                - map.generator_border,
+            x: rng.random_range(0.0..(settings.size.x.round() + settings.generator_border * 2.0))
+                - settings.generator_border,
+            y: rng.random_range(0.0..(settings.size.y.round() + settings.generator_border * 2.0))
+                - settings.generator_border,
         };
         if sites.iter().any(|site| site.distance(new_site) < 1.0) {
             continue;
         }
         sites.push(new_site);
-        if sites.len() >= map.sector_num as usize {
+        if sites.len() >= settings.sector_num as usize {
             break;
         }
     }
     println!("Generated {} sites", sites.len());
 
     let boundary = BoundingBox::new(
-        vec2_to_point(&(map.size / 2.0)),
-        map.size.x as f64,
-        map.size.y as f64,
+        vec2_to_point(&(settings.size / 2.0)),
+        settings.size.x as f64,
+        settings.size.y as f64,
     );
     let voronoi = VoronoiBuilder::default()
         .set_sites(sites.iter().map(vec2_to_point).collect())
         .set_bounding_box(boundary)
         .set_clip_behavior(ClipBehavior::Clip)
-        .set_lloyd_relaxation_iterations(map.lloyd_iters as usize)
+        .set_lloyd_relaxation_iterations(settings.lloyd_iters as usize)
         .build()
         .unwrap();
 
@@ -126,7 +106,7 @@ pub fn generate_map(
         let vertices: Vec<Vec2> = cell.iter_vertices().map(point_to_vec2).collect();
 
         let site = point_to_vec2(cell.site_position());
-        let height = perlin_noise.sample(site * map.altitude_perlin_scale);
+        let height = perlin_noise.sample(site * settings.altitude_perlin_scale);
         let centroid = utils::centroid(&vertices);
         let sector = Sector {
             site,
@@ -228,7 +208,7 @@ fn point_to_vec2(p: &Point) -> Vec2 {
     }
 }
 
-pub fn draw_debug(mut gizmos: Gizmos, map_query: Query<&Map>, sector_query: Query<&Sector>) {
+pub fn draw_debug(mut gizmos: Gizmos, settings: Res<MapGenSettings>, sector_query: Query<&Sector>) {
     for sector in &sector_query {
         // gizmos.circle_2d(sector.site, 3.0, Color::WHITE);
         gizmos.circle_2d(sector.centroid, 3.0, Color::srgb(0.0, 1.0, 1.0));
@@ -242,8 +222,7 @@ pub fn draw_debug(mut gizmos: Gizmos, map_query: Query<&Map>, sector_query: Quer
         }
     }
 
-    let map = map_query.single().unwrap();
-    gizmos.rect_2d(map.size / 2.0, map.size, Color::WHITE);
+    gizmos.rect_2d(settings.size / 2.0, settings.size, Color::WHITE);
 }
 
 pub fn create_map(mut commands: Commands, args: Res<Args>) {
@@ -251,28 +230,7 @@ pub fn create_map(mut commands: Commands, args: Res<Args>) {
 
     commands.spawn((
         Map {
-            size: vec2(1000.0, 500.0),
-
-            sector_num: 16000,
-
-            lloyd_iters: 5,
-            generator_border: 20.0,
-            altitude_perlin_scale: 0.008,
-
             sectors: Vec::new(),
-
-            biome_seed_num: 120,
-
-            city_num: 10,
-            city_min_spacing: 100.0,
-            city_start_pop_range: 10..1000,
-            city_deadzone: 20.0,
-
-            nodes_per_city_range: 1..3,
-            node_city_max_dist: 100.0,
-            node_city_min_dist: 20.0,
-            node_min_spacing: 70.0,
-            node_deadzone: 10.0,
         },
         Entropy::<WyRand>::seed_from_u64(seed),
         Transform::IDENTITY,

@@ -21,6 +21,7 @@ mod mouse;
 mod pointer_capture;
 mod resource;
 mod road;
+mod settings;
 mod states;
 mod ui;
 mod utils;
@@ -89,6 +90,29 @@ impl Plugin for GamePlugin {
             .init_resource::<mouse::MousePos>()
             .init_resource::<pointer_capture::IsPointerCaptured>()
             .insert_resource(args)
+            .insert_resource(settings::MapGenSettings {
+                size: vec2(1000.0, 500.0),
+
+                sector_num: 16000,
+
+                lloyd_iters: 5,
+                generator_border: 20.0,
+                altitude_perlin_scale: 0.008,
+
+                biome_seed_num: 120,
+
+                city_num: 10,
+                city_min_spacing: 100.0,
+                city_start_pop_range: 10..1000,
+                city_deadzone: 20.0,
+
+                nodes_per_city_range: 1..3,
+                node_city_max_dist: 100.0,
+                node_city_min_dist: 20.0,
+                node_min_spacing: 70.0,
+                node_deadzone: 10.0,
+            })
+            .insert_resource(settings::DisplaySettings { road_width: 4.0 })
             .add_systems(
                 OnEnter(states::AppState::InGame),
                 (

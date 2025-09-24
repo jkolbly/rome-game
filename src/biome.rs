@@ -5,7 +5,10 @@ use bevy_prng::WyRand;
 use bevy_rand::prelude::Entropy;
 use rand::Rng;
 
-use crate::map::{Map, Sector};
+use crate::{
+    map::{Map, Sector},
+    settings::MapGenSettings,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Biome {
@@ -18,6 +21,7 @@ pub enum Biome {
 pub fn generate_biomes(
     mut map_query: Query<(&Map, &mut Entropy<WyRand>)>,
     mut sector_query: Query<&mut Sector>,
+    settings: Res<MapGenSettings>,
 ) {
     let (map, mut rng) = map_query.single_mut().unwrap();
 
@@ -46,7 +50,7 @@ pub fn generate_biomes(
             e_sector: rand_sector,
         });
 
-        if seeds.len() >= map.biome_seed_num as usize {
+        if seeds.len() >= settings.biome_seed_num as usize {
             break;
         }
     }

@@ -8,6 +8,7 @@ use rand::Rng;
 use crate::{
     city::City,
     map::{Map, Sector},
+    settings::MapGenSettings,
     utils,
 };
 
@@ -40,6 +41,7 @@ pub fn spawn_resource_nodes(
     mut map_query: Query<(&Map, &mut Entropy<WyRand>)>,
     city_query: Query<(Entity, &mut City, &Transform)>,
     sector_query: Query<&Sector>,
+    settings: Res<MapGenSettings>,
 ) {
     let (map, mut rng) = map_query.single_mut().unwrap();
 
@@ -50,7 +52,7 @@ pub fn spawn_resource_nodes(
         .collect();
 
     for (e_city, mut city, t_city) in city_query {
-        let mut nodes_to_gen = rng.random_range(map.nodes_per_city_range.clone());
+        let mut nodes_to_gen = rng.random_range(settings.nodes_per_city_range.clone());
 
         for _ in 0..1000 {
             if nodes_to_gen <= 0 {
@@ -63,10 +65,10 @@ pub fn spawn_resource_nodes(
             let mut node_pos = sector.centroid;
 
             // Check not outside of deadzone
-            if node_pos.x < map.node_deadzone
-                || node_pos.x > map.size.x - map.node_deadzone
-                || node_pos.y < map.node_deadzone
-                || node_pos.y > map.size.y - map.node_deadzone
+            if node_pos.x < settings.node_deadzone
+                || node_pos.x > settings.size.x - settings.node_deadzone
+                || node_pos.y < settings.node_deadzone
+                || node_pos.y > settings.size.y - settings.node_deadzone
             {
                 continue;
             }
@@ -74,7 +76,7 @@ pub fn spawn_resource_nodes(
             // Check not too close to a city
             if city_positions
                 .iter()
-                .any(|pos| pos.distance(node_pos) < map.node_city_min_dist)
+                .any(|pos| pos.distance(node_pos) < settings.node_city_min_dist)
             {
                 continue;
             }
@@ -82,13 +84,13 @@ pub fn spawn_resource_nodes(
             // Check not too close to a node
             if node_positions
                 .iter()
-                .any(|pos| pos.distance(node_pos) < map.node_min_spacing)
+                .any(|pos| pos.distance(node_pos) < settings.node_min_spacing)
             {
                 continue;
             }
 
             // Check close enough to this city
-            if node_pos.distance(t_city.translation.xy()) > map.node_city_max_dist {
+            if node_pos.distance(t_city.translation.xy()) > settings.node_city_max_dist {
                 continue;
             }
 
