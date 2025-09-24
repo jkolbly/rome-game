@@ -73,15 +73,16 @@ pub fn add_road_meshes(
 pub fn debug_roads(mut gizmos: Gizmos, sector_query: Query<&Sector>, road_query: Query<&Road>) {
     for road in road_query {
         let mut path_iter = road.path.iter();
-        let mut prev = path_iter.next().unwrap();
-        let mut prev_coords = sector_query.get(*prev).unwrap().centroid;
+        let mut prev_coords = sector_query
+            .get(*path_iter.next().unwrap())
+            .unwrap()
+            .centroid;
 
         while let Some(next) = path_iter.next() {
             let next_coords = sector_query.get(*next).unwrap().centroid;
 
             gizmos.line_2d(prev_coords, next_coords, Color::srgb_u8(255, 0, 0));
 
-            prev = next;
             prev_coords = next_coords;
         }
     }
