@@ -1,7 +1,6 @@
 use bevy::{
-    asset::{AssetLoader, LoadContext, io::Reader},
+    asset::AssetLoader,
     prelude::*,
-    tasks::BoxedFuture,
 };
 use bevy_common_assets::csv::LoadedCsv;
 use serde::Deserialize;

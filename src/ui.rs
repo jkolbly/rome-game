@@ -1,6 +1,5 @@
-use bevy::{prelude::*, ui::RelativeCursorPosition};
+use bevy::prelude::*;
 
-use crate::pointer_capture::CapturesPointer;
 
 /// Component for UI displayed relative to the world.
 #[derive(Component, Clone)]

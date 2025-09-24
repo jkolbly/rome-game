@@ -1,8 +1,4 @@
-use bevy::{
-    asset::RenderAssetUsages,
-    prelude::*,
-    render::mesh::{Indices, PrimitiveTopology},
-};
+use bevy::prelude::*;
 
 use crate::{
     city::City,

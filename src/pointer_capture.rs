@@ -1,6 +1,5 @@
 use bevy::{prelude::*, ui::RelativeCursorPosition};
 
-use crate::mouse::MousePos;
 
 /// True iff the mouse pointer is over a UI element that
 /// prevents it from interacting with the world.

@@ -1,6 +1,6 @@
 use bevy::{prelude::*, ui::RelativeCursorPosition};
 
-use crate::{mouse::MousePos, window::Window};
+use crate::window::Window;
 
 /// Component for UI elements that are killed when clicked off of.
 #[derive(Component)]
