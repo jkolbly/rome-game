@@ -55,10 +55,8 @@ pub fn generate_map(
 
     commands.entity(entity).despawn_related::<Children>();
 
-    let mut perlin_noise = Noise::<(
-        MixCellGradients<OrthoGrid, Smoothstep, QuickGradients>,
-        SNormToUNorm,
-    )>::default();
+    let mut perlin_noise =
+        Noise::<(MixCellGradients<OrthoGrid, Smoothstep, QuickGradients>,)>::default();
     perlin_noise.set_seed(rng.random());
 
     println!("Generating map with size: {}", settings.size);
@@ -106,7 +104,9 @@ pub fn generate_map(
         let vertices: Vec<Vec2> = cell.iter_vertices().map(point_to_vec2).collect();
 
         let site = point_to_vec2(cell.site_position());
-        let height = perlin_noise.sample(site * settings.altitude_perlin_scale);
+        let layer1: f32 = perlin_noise.sample(site * settings.altitude_perlin_scale);
+        let layer2: f32 = perlin_noise.sample(site * settings.altitude_perlin_scale * 4.0);
+        let height = layer1 + layer2 * 0.5;
         let centroid = utils::centroid(&vertices);
         let sector = Sector {
             site,
@@ -165,10 +165,11 @@ pub fn add_map_mesh(
             triangles.push(i as u32 + index_offset + 1);
         }
         let color = match sector.biome.unwrap() {
-            Biome::Plains => Color::srgb_u8(124, 252, 0).darker(sector.height / 2.0),
-            Biome::Forest => Color::srgb_u8(34, 139, 34).darker(sector.height / 8.0),
-            Biome::Desert => Color::srgb_u8(255, 255, 224).darker(sector.height / 2.0),
-            Biome::Mountains => Color::srgb_u8(169, 169, 169).darker(sector.height / 4.0),
+            Biome::Plains => Color::srgb_u8(124, 252, 0),
+            Biome::Forest => Color::srgb_u8(34, 139, 34),
+            Biome::Desert => Color::srgb_u8(255, 255, 224),
+            Biome::Mountains => Color::srgb_u8(169, 169, 169),
+            Biome::Water => Color::srgb_u8(0, 0, 255),
         };
         for vertex in &sector.border {
             positions.push(vertex.extend(0.0));

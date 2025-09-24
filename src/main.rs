@@ -98,7 +98,8 @@ impl Plugin for GamePlugin {
 
                 lloyd_iters: 5,
                 generator_border: 20.0,
-                altitude_perlin_scale: 0.008,
+                altitude_perlin_scale: 0.004,
+                water_cutoff: -0.6,
 
                 biome_seed_num: 120,
 

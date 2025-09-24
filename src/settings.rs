@@ -11,6 +11,7 @@ pub struct MapGenSettings {
     pub lloyd_iters: u32,
     pub generator_border: f32,
     pub altitude_perlin_scale: f32,
+    pub water_cutoff: f32,
 
     pub biome_seed_num: u32,
 

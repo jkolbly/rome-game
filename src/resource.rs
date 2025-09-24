@@ -6,6 +6,7 @@ use bevy_rand::prelude::Entropy;
 use rand::Rng;
 
 use crate::{
+    biome::Biome,
     city::City,
     map::{Map, Sector},
     settings::MapGenSettings,
@@ -105,10 +106,10 @@ pub fn spawn_resource_nodes(
 
             // Get node type and check not in desert
             let node_type = match sector.biome.unwrap() {
-                crate::biome::Biome::Plains => ResourceNodeType::Farm,
-                crate::biome::Biome::Forest => ResourceNodeType::Lumbermill,
-                crate::biome::Biome::Mountains => ResourceNodeType::Mine,
-                crate::biome::Biome::Desert => continue,
+                Biome::Plains => ResourceNodeType::Farm,
+                Biome::Forest => ResourceNodeType::Lumbermill,
+                Biome::Mountains => ResourceNodeType::Mine,
+                Biome::Desert | Biome::Water => continue,
             };
             let produces = match node_type {
                 ResourceNodeType::Farm => Resource::Wheat,

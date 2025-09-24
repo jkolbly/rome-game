@@ -16,6 +16,7 @@ pub enum Biome {
     Forest,
     Mountains,
     Desert,
+    Water,
 }
 
 pub fn generate_biomes(
@@ -64,13 +65,20 @@ pub fn generate_biomes(
             continue;
         }
 
-        sector.cost = match biome {
+        let real_biome = if sector.height < settings.water_cutoff {
+            Biome::Water
+        } else {
+            biome
+        };
+
+        sector.cost = match real_biome {
             Biome::Plains => 1.0,
             Biome::Forest => 5.0,
             Biome::Mountains => 10.0,
             Biome::Desert => 1.0,
+            Biome::Water => 100.0,
         };
-        sector.biome = Some(biome);
+        sector.biome = Some(real_biome);
 
         for neighbor in &sector.neighbors {
             seeds.push_back(BiomeSeed {

@@ -5,6 +5,7 @@ use bevy_rand::prelude::*;
 use rand::Rng;
 
 use crate::{
+    biome::Biome,
     city_names::{CityName, NameListHandle},
     clickable::{ClickHitbox, ClickState, JustPressed},
     demographic::{Demographic, JobType},
@@ -109,10 +110,10 @@ pub fn spawn_cities(
 
         // Check in a valid biome
         match sector.biome.unwrap() {
-            crate::biome::Biome::Forest | crate::biome::Biome::Mountains => {
+            Biome::Forest | Biome::Mountains | Biome::Water => {
                 continue;
             }
-            crate::biome::Biome::Plains | crate::biome::Biome::Desert => {}
+            Biome::Plains | Biome::Desert => {}
         }
 
         let name_index =
