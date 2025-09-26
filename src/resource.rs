@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bevy_prng::WyRand;
@@ -9,15 +10,28 @@ use crate::{
     biome::Biome,
     city::City,
     map::{Map, Sector},
-    settings::MapGenSettings,
+    settings::{GameplaySettings, MapGenSettings},
+    shipment::Shipment,
     utils,
+    wagon::Wagon,
 };
 
 /// A type of non-global resource.
+#[derive(Clone, Copy)]
 pub enum Resource {
     Wheat,
     Ore,
     Lumber,
+}
+
+impl Debug for Resource {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Wheat => write!(f, "Wheat"),
+            Self::Ore => write!(f, "Ore"),
+            Self::Lumber => write!(f, "Lumber"),
+        }
+    }
 }
 
 /// A resource production node.
@@ -25,8 +39,11 @@ pub enum Resource {
 #[require(Transform)]
 pub struct ResourceNode {
     pub node_type: ResourceNodeType,
-    pub produces: Resource,
+    pub produces: Shipment,
     pub sector: Entity,
+    pub wagon_timer: f32,
+    pub city: Entity,
+    pub road: Entity,
 }
 
 /// A type of [`ResourceNode`]
@@ -43,6 +60,7 @@ pub fn spawn_resource_nodes(
     city_query: Query<(Entity, &mut City, &Transform)>,
     sector_query: Query<&Sector>,
     settings: Res<MapGenSettings>,
+    gameplay_settings: Res<GameplaySettings>,
 ) {
     let (map, mut rng) = map_query.single_mut().unwrap();
 
@@ -126,8 +144,14 @@ pub fn spawn_resource_nodes(
                 .spawn((
                     ResourceNode {
                         node_type,
-                        produces,
+                        produces: Shipment {
+                            resource: produces,
+                            quantity: 1,
+                        },
                         sector: e_sector,
+                        wagon_timer: rng.random_range(0.0..gameplay_settings.node_wagon_spawn_time),
+                        city: e_city,
+                        road: Entity::PLACEHOLDER,
                     },
                     Transform::from_translation(node_pos.extend(0.0)),
                 ))
@@ -182,6 +206,25 @@ pub fn debug_relations(
                 t_node.translation().xy(),
                 Color::srgb_u8(210, 105, 30),
             );
+        }
+    }
+}
+
+pub fn spawn_node_wagons(
+    time: Res<Time>,
+    settings: Res<GameplaySettings>,
+    mut commands: Commands,
+    node_query: Query<(&mut ResourceNode, &GlobalTransform)>,
+) {
+    for (mut node, t_node) in node_query {
+        node.wagon_timer -= time.delta_secs();
+        if node.wagon_timer <= 0.0 {
+            commands.spawn((
+                Wagon::new(node.produces, node.road, node.city),
+                Transform::from_xyz(t_node.translation().x, t_node.translation().y, 0.0),
+            ));
+
+            node.wagon_timer = settings.node_wagon_spawn_time;
         }
     }
 }

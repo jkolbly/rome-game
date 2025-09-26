@@ -13,11 +13,12 @@ use crate::{
     format_text::{FormatText, ValueExposer},
     map::{Map, Sector},
     settings::MapGenSettings,
+    shipment::ShipmentReceiver,
     window::{EntryBuilder, WindowBuilder},
 };
 
 #[derive(Component)]
-#[require(Transform)]
+#[require(Transform, ShipmentReceiver)]
 pub struct City {
     pub name: String,
     pub population: u32,
@@ -37,7 +38,7 @@ pub fn click_city(
 
     WindowBuilder::new()
         .width(Val::Percent(20.0))
-        .height(Val::Percent(25.0))
+        .height(Val::Auto)
         .add_entry(EntryBuilder::text(&city.name).centered())
         .add_entry(EntryBuilder::formatted_text(
             FormatText::new()
@@ -151,6 +152,7 @@ pub fn spawn_cities(
                 ClickHitbox::Circle { radius: 10.0 },
                 ValueExposer::default(),
                 Visibility::Visible,
+                ShipmentReceiver::new(),
             ))
             .id();
 
@@ -185,5 +187,16 @@ pub fn expose_cities(query: Query<(&mut ValueExposer, &City), Changed<City>>) {
         exposer
             .tags
             .insert(ExposerTag::CityPopulation, city.population.to_string());
+    }
+}
+
+pub fn receive_city_shipments(query: Query<(&City, &mut ShipmentReceiver)>) {
+    for (city, mut receiver) in query {
+        while let Some(shipment) = receiver.get_shipment() {
+            println!(
+                "{} received shipment of {} {:?}",
+                city.name, shipment.quantity, shipment.resource
+            );
+        }
     }
 }

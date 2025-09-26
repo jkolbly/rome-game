@@ -23,9 +23,11 @@ mod pointer_capture;
 mod resource;
 mod road;
 mod settings;
+mod shipment;
 mod states;
 mod ui;
 mod utils;
+mod wagon;
 mod window;
 
 #[derive(Parser, Debug, Resource)]
@@ -115,6 +117,10 @@ impl Plugin for GamePlugin {
                 node_deadzone: 10.0,
             })
             .insert_resource(settings::DisplaySettings { road_width: 4.0 })
+            .insert_resource(settings::GameplaySettings {
+                wagon_speed: 1.0,
+                node_wagon_spawn_time: 15.0,
+            })
             .add_systems(
                 OnEnter(states::AppState::InGame),
                 (
@@ -154,6 +160,10 @@ impl Plugin for GamePlugin {
                     demographic::update_demographics,
                     demographic::update_city_pop.after(demographic::update_demographics),
                     window::toggle_visibility_buttons,
+                    wagon::move_wagons,
+                    city::receive_city_shipments.after(wagon::move_wagons),
+                    resource::spawn_node_wagons,
+                    wagon::add_wagon_meshes.after(resource::spawn_node_wagons),
                 ),
             )
             .add_systems(

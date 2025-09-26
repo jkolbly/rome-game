@@ -1,38 +1,61 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, render::render_resource::encase::private::Length};
 
 use crate::{
     city::City,
     map::Sector,
     resource::ResourceNode,
     settings::DisplaySettings,
-    utils::{self, bezier_path, line_mesh},
+    utils::{self, bezier_curve, bezier_path, line_mesh},
 };
 
 #[derive(Component)]
 pub struct Road {
     pub start_sector: Entity,
     pub end_sector: Entity,
+
+    /// The list of sectors making this path.
     pub path: Vec<Entity>,
+
+    /// The curve making up this road.
+    pub curve: CubicCurve<Vec2>,
+
+    /// The length of this road.
+    pub length: f32,
+
+    /// The multiplier to movement speed on this road.
+    pub speed_multiplier: f32,
 }
 
 pub fn spawn_node_roads(
     mut commands: Commands,
-    node_query: Query<&ResourceNode>,
+    mut node_query: Query<&mut ResourceNode>,
     city_query: Query<&City>,
     sector_query: Query<&Sector>,
 ) {
     for city in city_query {
         for e_node in &city.resource_nodes {
-            let node = node_query.get(*e_node).unwrap();
+            let mut node = node_query.get_mut(*e_node).unwrap();
             let path = utils::pathfind(city.sector, node.sector, &sector_query).unwrap();
-            commands.spawn((
-                Road {
-                    start_sector: city.sector,
-                    end_sector: node.sector,
-                    path,
-                },
-                Visibility::Visible,
-            ));
+            let path_points = path
+                .iter()
+                .map(|e| sector_query.get(*e).unwrap().centroid)
+                .collect();
+            let curve = bezier_curve(path_points);
+            let length = curve.segments().length() as f32;
+            let e_road = commands
+                .spawn((
+                    Road {
+                        start_sector: city.sector,
+                        end_sector: node.sector,
+                        path,
+                        curve,
+                        length,
+                        speed_multiplier: 1.0,
+                    },
+                    Visibility::Visible,
+                ))
+                .id();
+            node.road = e_road;
         }
     }
 }
@@ -42,23 +65,17 @@ pub fn add_road_meshes(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     road_query: Query<(Entity, &Road), Without<Mesh2d>>,
-    sector_query: Query<&Sector>,
     settings: Res<DisplaySettings>,
 ) {
     for (e_road, road) in road_query {
-        let path = road
-            .path
-            .iter()
-            .map(|e| sector_query.get(*e).unwrap().centroid)
-            .collect();
-        let bezier = bezier_path(path, 150);
+        let points = road.curve.iter_positions(150).collect();
 
-        let mesh = line_mesh(&bezier, settings.road_width / 2.0);
+        let mesh = line_mesh(&points, settings.road_width / 2.0);
         let mesh_handle = meshes.add(mesh);
         let mesh_entity = commands
             .spawn((
                 Mesh2d(mesh_handle),
-                MeshMaterial2d(materials.add(Color::srgb_u8(123, 63, 0))),
+                MeshMaterial2d(materials.add(Color::srgb_u8(210, 180, 140))),
                 Transform::from_xyz(0.0, 0.0, 0.0),
             ))
             .id();

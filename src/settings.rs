@@ -31,3 +31,9 @@ pub struct MapGenSettings {
 pub struct DisplaySettings {
     pub road_width: f32,
 }
+
+#[derive(Resource)]
+pub struct GameplaySettings {
+    pub wagon_speed: f32,
+    pub node_wagon_spawn_time: f32,
+}

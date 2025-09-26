@@ -239,6 +239,16 @@ pub fn line_mesh(path: &Vec<Vec2>, width: f32) -> Mesh {
     .with_inserted_indices(Indices::U32(triangles))
 }
 
+/// Generate a bezier curve from control points.
+pub fn bezier_curve(mut control_points: Vec<Vec2>) -> CubicCurve<Vec2> {
+    let last = *control_points.last().unwrap();
+    let mut new_points: Vec<Vec2> = vec![control_points[0], control_points[0]];
+    new_points.append(&mut control_points);
+    new_points.push(last);
+    new_points.push(last);
+    CubicBSpline::new(new_points).to_curve().unwrap()
+}
+
 /// Create a new path by using an existing path as Bezier control points.
 pub fn bezier_path(mut path: Vec<Vec2>, subdivisions: usize) -> Vec<Vec2> {
     let last = *path.last().unwrap();
