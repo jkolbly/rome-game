@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use std::fmt::Debug;
+use std::{collections::HashMap, time::Duration};
 
 use bevy::prelude::*;
 use bevy_prng::WyRand;
@@ -41,7 +41,7 @@ pub struct ResourceNode {
     pub node_type: ResourceNodeType,
     pub produces: Shipment,
     pub sector: Entity,
-    pub wagon_timer: f32,
+    pub wagon_timer: Timer,
     pub city: Entity,
     pub road: Entity,
 }
@@ -140,6 +140,15 @@ pub fn spawn_resource_nodes(
             // Compensate for the change caused by adding as a child
             node_pos = node_pos - t_city.translation.xy();
 
+            let wagon_timer = Timer::from_seconds(
+                gameplay_settings.node_wagon_spawn_time,
+                TimerMode::Repeating,
+            )
+            .tick(Duration::from_secs_f32(
+                rng.random_range(0.0..gameplay_settings.node_wagon_spawn_time),
+            ))
+            .clone();
+
             let e_node = commands
                 .spawn((
                     ResourceNode {
@@ -149,7 +158,7 @@ pub fn spawn_resource_nodes(
                             quantity: 1,
                         },
                         sector: e_sector,
-                        wagon_timer: rng.random_range(0.0..gameplay_settings.node_wagon_spawn_time),
+                        wagon_timer,
                         city: e_city,
                         road: Entity::PLACEHOLDER,
                     },
@@ -212,19 +221,16 @@ pub fn debug_relations(
 
 pub fn spawn_node_wagons(
     time: Res<Time>,
-    settings: Res<GameplaySettings>,
     mut commands: Commands,
     node_query: Query<(&mut ResourceNode, &GlobalTransform)>,
 ) {
     for (mut node, t_node) in node_query {
-        node.wagon_timer -= time.delta_secs();
-        if node.wagon_timer <= 0.0 {
+        node.wagon_timer.tick(time.delta());
+        if node.wagon_timer.finished() {
             commands.spawn((
                 Wagon::new(node.produces, node.road, node.city),
                 Transform::from_xyz(t_node.translation().x, t_node.translation().y, 0.0),
             ));
-
-            node.wagon_timer = settings.node_wagon_spawn_time;
         }
     }
 }
