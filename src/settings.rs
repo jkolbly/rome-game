@@ -1,4 +1,5 @@
 use std::ops::Range;
+use std::path::Path;
 
 use bevy::prelude::*;
 
@@ -36,4 +37,10 @@ pub struct DisplaySettings {
 pub struct GameplaySettings {
     pub wagon_speed: f32,
     pub node_wagon_spawn_time: f32,
+}
+
+#[derive(Resource)]
+pub struct SaveSettings {
+    pub save_directory: Box<Path>,
+    pub save_interval: f32,
 }

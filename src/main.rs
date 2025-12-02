@@ -1,3 +1,5 @@
+use std::path::Path;
+
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     input::{InputSystem, common_conditions::input_just_pressed},
@@ -22,6 +24,7 @@ mod mouse;
 mod pointer_capture;
 mod resource;
 mod road;
+mod save;
 mod settings;
 mod shipment;
 mod states;
@@ -121,6 +124,10 @@ impl Plugin for GamePlugin {
                 wagon_speed: 1.0,
                 node_wagon_spawn_time: 15.0,
             })
+            .insert_resource(settings::SaveSettings {
+                save_directory: Path::new("./saves").into(),
+                save_interval: 3.0,
+            })
             .add_systems(
                 OnEnter(states::AppState::InGame),
                 (
@@ -132,6 +139,7 @@ impl Plugin for GamePlugin {
                     resource::add_node_meshes,
                     road::spawn_node_roads,
                     road::add_road_meshes,
+                    save::spawn_save_manager,
                 )
                     .chain(),
             )
@@ -164,6 +172,7 @@ impl Plugin for GamePlugin {
                     city::receive_city_shipments.after(wagon::move_wagons),
                     resource::spawn_node_wagons,
                     wagon::add_wagon_meshes.after(resource::spawn_node_wagons),
+                    save::tick_save_manager,
                 ),
             )
             .add_systems(
