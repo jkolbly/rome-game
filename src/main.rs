@@ -18,6 +18,7 @@ mod clickable;
 mod demographic;
 mod exposer_tags;
 mod format_text;
+mod history;
 mod keyboard;
 mod map;
 mod mouse;
@@ -135,8 +136,12 @@ impl Plugin for GamePlugin {
                     map::generate_map,
                     biome::generate_biomes,
                     (map::add_map_mesh, city::spawn_cities),
-                    (city::add_city_meshes, resource::spawn_resource_nodes),
-                    resource::add_node_meshes,
+                    (
+                        city::add_city_meshes,
+                        resource::spawn_resource_nodes,
+                        history::setup_history_sim,
+                    ),
+                    (resource::add_node_meshes, history::run_history_sim),
                     road::spawn_node_roads,
                     road::add_road_meshes,
                     save::spawn_save_manager,

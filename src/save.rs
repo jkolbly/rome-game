@@ -4,6 +4,8 @@ use bevy::prelude::*;
 
 use crate::settings::SaveSettings;
 
+/// Component that manages saving game data on a regular interval.
+/// Intended to be a singleton component.
 #[derive(Component)]
 pub struct SaveManager {
     timer: Timer,
