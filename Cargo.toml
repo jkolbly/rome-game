@@ -15,6 +15,7 @@ bevy_common_assets = "0.13.0"
 serde = "1.0.225"
 clap = { version = "4.5.48", features = ["derive"] }
 chrono = "0.4.42"
+lazy_static = "1.5.0"
 
 # Enable a small amount of optimization in the dev profile.
 [profile.dev]

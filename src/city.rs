@@ -1,12 +1,11 @@
 use bevy::{platform::collections::HashMap, prelude::*};
-use bevy_common_assets::csv::LoadedCsv;
 use bevy_prng::WyRand;
 use bevy_rand::prelude::*;
 use rand::Rng;
 
 use crate::{
     biome::Biome,
-    city_names::{CityName, NameListHandle},
+    city_names::get_name,
     clickable::{ClickHitbox, ClickState, JustPressed},
     demographic::{Demographic, JobType, Population},
     exposer_tags::ExposerTag,
@@ -72,8 +71,6 @@ pub fn click_city(
 }
 
 pub fn spawn_cities(
-    name_list: Res<NameListHandle>,
-    names: Res<Assets<LoadedCsv<CityName>>>,
     mut commands: Commands,
     mut map_query: Query<(&Map, &mut Entropy<WyRand>)>,
     sector_query: Query<&Sector>,
@@ -82,9 +79,6 @@ pub fn spawn_cities(
     let (map, mut rng) = map_query.single_mut().unwrap();
 
     let mut city_positions: Vec<Vec2> = Vec::new();
-
-    let names_list_unwrapped = names.get(&name_list.0).unwrap();
-    let mut unused_name_indices: Vec<usize> = (0..names_list_unwrapped.rows.len()).collect();
 
     for _ in 0..1000 {
         let rand_index = rng.random_range(0..map.sectors.len());
@@ -116,55 +110,65 @@ pub fn spawn_cities(
             Biome::Plains | Biome::Desert => {}
         }
 
-        let name_index =
-            unused_name_indices.swap_remove(rng.random_range(..unused_name_indices.len()));
-        let name = names_list_unwrapped
-            .rows
-            .get(name_index)
-            .unwrap()
-            .name
-            .to_string();
-
         city_positions.push(city_pos.clone());
-        let total_pop = rng.random_range(settings.city_start_pop_range.clone());
-        let mut demographics = HashMap::new();
-        demographics.insert(
-            JobType::Unemployed,
-            commands
-                .spawn(Demographic {
-                    population: total_pop,
-                    job: JobType::Unemployed,
-                })
-                .id(),
-        );
-        let e_city = commands
-            .spawn((
-                City {
-                    name,
-                    resource_nodes: Vec::new(),
-                    sector: e_sector,
-                    demographics: demographics.clone(),
-                },
-                Population {
-                    population: total_pop,
-                },
-                Transform::from_xyz(city_pos.x, city_pos.y, 1.0),
-                ClickState::default(),
-                ClickHitbox::Circle { radius: 10.0 },
-                ValueExposer::default(),
-                Visibility::Visible,
-                ShipmentReceiver::new(),
-            ))
-            .id();
+        let population = rng.random_range(settings.city_start_pop_range.clone());
 
-        for e_demo in demographics.values() {
-            commands.entity(e_city).add_child(*e_demo);
-        }
+        spawn_city(
+            commands.reborrow(),
+            &mut rng,
+            e_sector,
+            city_pos,
+            population,
+        );
 
         if city_positions.len() as u32 >= settings.city_num {
             break;
         }
     }
+}
+
+/// Spawn a new city into the world at a sector and return it.
+fn spawn_city(
+    mut commands: Commands,
+    rng: &mut Entropy<WyRand>,
+    sector: Entity,
+    position: Vec2,
+    population: u32,
+) -> Entity {
+    let mut demographics = HashMap::new();
+    demographics.insert(
+        JobType::Unemployed,
+        commands
+            .spawn(Demographic {
+                population,
+                job: JobType::Unemployed,
+            })
+            .id(),
+    );
+
+    let e_city = commands
+        .spawn((
+            City {
+                name: get_name(rng),
+                resource_nodes: Vec::new(),
+                sector,
+                demographics: demographics.clone(),
+            },
+            Population { population },
+            Transform::from_xyz(position.x, position.y, 1.0),
+            ClickState::default(),
+            ClickHitbox::Circle { radius: 10.0 },
+            ValueExposer::default(),
+            Visibility::Visible,
+            ShipmentReceiver::new(),
+        ))
+        .id();
+
+    for e_demo in demographics.values() {
+        commands.entity(e_city).add_child(*e_demo);
+    }
+
+    e_city
 }
 
 pub fn add_city_meshes(

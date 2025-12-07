@@ -135,7 +135,11 @@ impl Plugin for GamePlugin {
                     map::create_map,
                     map::generate_map,
                     biome::generate_biomes,
-                    (map::add_map_mesh, city::spawn_cities),
+                    (
+                        map::add_map_mesh,
+                        city_names::set_unused_names,
+                        city::spawn_cities.after(city_names::set_unused_names),
+                    ),
                     (
                         city::add_city_meshes,
                         resource::spawn_resource_nodes,
