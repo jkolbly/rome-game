@@ -124,6 +124,23 @@ pub fn pathfind(
     Err(PathfindingError::NoPathFound)
 }
 
+/// Get a road-shaped path between sectors as both a curve and a list of sectors.
+pub fn bezier_pathfind(
+    start: Entity,
+    end: Entity,
+    sector_query: &Query<&Sector>,
+) -> Result<(CubicCurve<Vec2>, Vec<Entity>), PathfindingError> {
+    let path = pathfind(start, end, sector_query)?;
+    Ok((
+        bezier_curve(
+            path.iter()
+                .map(|e| sector_query.get(*e).unwrap().centroid)
+                .collect(),
+        ),
+        path,
+    ))
+}
+
 struct BorderSorter {
     estimate: f32,
     e_sector: Entity,

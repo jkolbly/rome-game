@@ -5,7 +5,7 @@ use crate::{
     map::Sector,
     resource::ResourceNode,
     settings::DisplaySettings,
-    utils::{self, bezier_curve, bezier_path, line_mesh},
+    utils::{bezier_pathfind, line_mesh},
 };
 
 #[derive(Component)]
@@ -35,12 +35,7 @@ pub fn spawn_node_roads(
     for city in city_query {
         for e_node in &city.resource_nodes {
             let mut node = node_query.get_mut(*e_node).unwrap();
-            let path = utils::pathfind(city.sector, node.sector, &sector_query).unwrap();
-            let path_points = path
-                .iter()
-                .map(|e| sector_query.get(*e).unwrap().centroid)
-                .collect();
-            let curve = bezier_curve(path_points);
+            let (curve, path) = bezier_pathfind(city.sector, node.sector, &sector_query).unwrap();
             let length = curve.segments().length() as f32;
             let e_road = commands
                 .spawn((
