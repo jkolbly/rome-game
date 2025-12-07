@@ -2,6 +2,12 @@ use bevy::{platform::collections::HashSet, prelude::*};
 
 use crate::city::City;
 
+/// Component for geographical areas that contain people
+#[derive(Component)]
+pub struct Population {
+    pub population: u32,
+}
+
 /// A group of people within a city
 #[derive(Component)]
 pub struct Demographic {
@@ -25,7 +31,7 @@ pub enum JobType {
 pub fn update_city_pop(
     changed_query: Query<&ChildOf, Changed<Demographic>>,
     demo_query: Query<&Demographic>,
-    mut city_query: Query<&mut City>,
+    mut city_query: Query<(&mut Population, &City)>,
 ) {
     let cities: HashSet<Entity> = changed_query
         .iter()
@@ -33,7 +39,7 @@ pub fn update_city_pop(
         .collect();
 
     for e_city in cities {
-        let mut city = city_query.get_mut(e_city).unwrap();
+        let (mut pop, city) = city_query.get_mut(e_city).unwrap();
 
         let mut population = 0;
         for e_demo in city.demographics.values() {
@@ -41,7 +47,7 @@ pub fn update_city_pop(
             population += demo.population;
         }
 
-        city.population = population;
+        pop.population = population;
     }
 }
 

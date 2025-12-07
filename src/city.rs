@@ -8,7 +8,7 @@ use crate::{
     biome::Biome,
     city_names::{CityName, NameListHandle},
     clickable::{ClickHitbox, ClickState, JustPressed},
-    demographic::{Demographic, JobType},
+    demographic::{Demographic, JobType, Population},
     exposer_tags::ExposerTag,
     format_text::{FormatText, ValueExposer},
     map::{Map, Sector},
@@ -21,7 +21,6 @@ use crate::{
 #[require(Transform, ShipmentReceiver)]
 pub struct City {
     pub name: String,
-    pub population: u32,
     pub resource_nodes: Vec<Entity>,
     pub sector: Entity,
 
@@ -142,10 +141,12 @@ pub fn spawn_cities(
             .spawn((
                 City {
                     name,
-                    population: total_pop,
                     resource_nodes: Vec::new(),
                     sector: e_sector,
                     demographics: demographics.clone(),
+                },
+                Population {
+                    population: total_pop,
                 },
                 Transform::from_xyz(city_pos.x, city_pos.y, 1.0),
                 ClickState::default(),
@@ -182,11 +183,11 @@ pub fn add_city_meshes(
     }
 }
 
-pub fn expose_cities(query: Query<(&mut ValueExposer, &City), Changed<City>>) {
-    for (mut exposer, city) in query {
+pub fn expose_cities(query: Query<(&mut ValueExposer, &Population), Changed<City>>) {
+    for (mut exposer, pop) in query {
         exposer
             .tags
-            .insert(ExposerTag::CityPopulation, city.population.to_string());
+            .insert(ExposerTag::CityPopulation, pop.population.to_string());
     }
 }
 
